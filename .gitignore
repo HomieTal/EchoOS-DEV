@@ -1,0 +1,5 @@
+# archiso build output
+/out/
+/work/
+
+# locally rendered pacman.conf (absolute path is machine specific)
