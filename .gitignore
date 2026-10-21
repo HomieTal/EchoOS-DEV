@@ -1,5 +1,27 @@
-# archiso build output
-/out/
-/work/
+# Build outputs
+out/
+work/
+*.iso
+*.iso.sig
+*.iso.sha256
+*.tar
+*.tar.zst
 
-# locally rendered pacman.conf (absolute path is machine specific)
+# Local package cache
+*.pkg.tar.*
+!.gitkeep
+
+# Editor
+*~
+.*.swp
+.*.swo
+/.vscode/
+/.idea/
+
+# Python
+__pycache__/
+*.pyc
+
+# Temporary
+/tmp/
+/var/tmp/
