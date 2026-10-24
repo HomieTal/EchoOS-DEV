@@ -1,1 +1,8 @@
+# calamares links against these KF6 libraries directly; they are listed
+# explicitly because the calamares package built from PKGBUILD declares an
+# incomplete depends array (missing kcrash, kconfig, kpackage), which left
+# the installer unable to start in the 2026.10.24 live image.
 calamares
+kconfig
+kcrash
+kpackage

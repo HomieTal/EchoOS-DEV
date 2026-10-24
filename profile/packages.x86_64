@@ -48,9 +48,12 @@ irssi
 iw
 iwd
 jfsutils
+kconfig
 kbd
+kcrash
 kitty-terminfo
 kmscon-terminfo
+kpackage
 ldns
 less
 lftp
