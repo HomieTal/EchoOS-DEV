@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Echo OS Installer (autostart)
+Comment=Start the Echo OS installer once the live desktop is ready
+Exec=/usr/local/bin/echoos-install-launcher
+TryExec=/usr/local/bin/echoos-install-launcher
+Icon=calamares
+Terminal=false
+NoDisplay=true
+Categories=System;

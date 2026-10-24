@@ -11,7 +11,10 @@ license=("GPL-3.0-or-later")
 arch=('i686' 'x86_64')
 
 depends=(
+  'kconfig'
   'kcoreaddons'
+  'kcrash'
+  'kpackage'
   'kpmcore'
   'libpwquality'
   'qt6-declarative'

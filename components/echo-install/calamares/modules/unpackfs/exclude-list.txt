@@ -23,3 +23,5 @@
 /etc/polkit-1/rules.d/49-nopasswd_global.rules
 /etc/polkit-1/rules.d/50-calamares.rules
 /etc/security/faillock.conf
+/etc/xdg/autostart/echoos-install.desktop
+/usr/local/bin/echoos-install-launcher

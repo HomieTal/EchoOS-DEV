@@ -7,3 +7,5 @@ echo-boot	config/grub	grub
 echo-boot	config/initramfs	airootfs/etc/mkinitcpio.conf.d
 echo-install	calamares	airootfs/etc/calamares
 echo-install	config/live	airootfs/etc
+echo-install	config/home	airootfs/home
+echo-install	config/rootfs	airootfs

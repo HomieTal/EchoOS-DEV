@@ -13,6 +13,13 @@ unchanged. `profile/` and Echo Boot remain authoritative/unchanged.
 - Offline `unpackfs` from live SquashFS with `unpackfs/exclude-list.txt`.
 - Target GRUB through Calamares (`modules/bootloader.conf`).
 - Live-only polkit rule for launching Calamares.
+- Live installer launch integration: one launch path through
+  `usr/local/bin/echoos-install-launcher` (single-instance guard, bounded
+  session wait, failure log at /tmp/echoos-install-launcher.log, escalation
+  via `pkexec` only), wired as the "Install Echo OS" desktop shortcut
+  (`config/home/archiso/Desktop/echoos-install.desktop`) and the XDG
+  autostart entry (`config/live/etc/xdg/autostart/echoos-install.desktop`);
+  all three are LIVE-EXCLUDED.
 - Calamares package recipe and artifact.
 
 ## Migrated layout
@@ -23,6 +30,9 @@ unchanged. `profile/` and Echo Boot remain authoritative/unchanged.
 | `calamares/modules/*.conf` (16 files) | `profile/airootfs/etc/calamares/modules/*.conf` | `airootfs/etc/calamares/modules/*.conf` | Including unpackfs |
 | `calamares/modules/unpackfs/exclude-list.txt` | `profile/airootfs/etc/calamares/modules/unpackfs/exclude-list.txt` | `airootfs/etc/calamares/modules/unpackfs/exclude-list.txt` | Live/target boundary |
 | `config/live/polkit-1/rules.d/50-calamares.rules` | `profile/airootfs/etc/polkit-1/rules.d/50-calamares.rules` | `airootfs/etc/polkit-1/rules.d/50-calamares.rules` | LIVE-EXCLUDED |
+| `config/live/etc/xdg/autostart/echoos-install.desktop` | - | `airootfs/etc/xdg/autostart/echoos-install.desktop` | XDG autostart; LIVE-EXCLUDED |
+| `config/live/usr/local/bin/echoos-install-launcher` | - | `airootfs/usr/local/bin/echoos-install-launcher` | Launch path (0755); LIVE-EXCLUDED |
+| `config/home/archiso/Desktop/echoos-install.desktop` | - | `airootfs/home/archiso/Desktop/echoos-install.desktop` | Desktop shortcut (0755); excluded via `/home/archiso` |
 | `packages/PKGBUILD` | `packages/PKGBUILD` | - | Build input |
 | `packages/calamares-3.4.2-2-x86_64.pkg.tar.zst` | `packages/calamares-3.4.2-2-x86_64.pkg.tar.zst` | - | Artifact (not source of truth) |
 | `packages/packages.x86_64` | manifest | - | `[calamares]` |
@@ -32,7 +42,7 @@ unchanged. `profile/` and Echo Boot remain authoritative/unchanged.
 
 ## Overlays
 
-From `build/config/overlays.tsv`: `calamares/` -> `airootfs/etc/calamares/`, `config/live/` -> `airootfs/etc/`.
+From `build/config/overlays.tsv`: `calamares/` -> `airootfs/etc/calamares/`, `config/live/` -> `airootfs/etc/`, `config/home/` -> `airootfs/home/`.
 
 ## Dependencies
 

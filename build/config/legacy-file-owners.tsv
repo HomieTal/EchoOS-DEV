@@ -1,9 +1,20 @@
 legacy_path	owner	scope	future_path	profile_destination	note
+.gitignore	SHARED	BUILD	.gitignore	-	Build-output ignore rules
+README.md	SHARED	BUILD	README.md	-	Repository/build documentation
+build.sh	SHARED	BUILD	scripts/build.sh	-	Existing direct mkarchiso entry point; remains unchanged in Step 1
+docs/phase-1-architecture-report.md	SHARED	BUILD	docs/phase-1-architecture-report.md	-	Existing Phase 1 report; preserved
+packages/PKGBUILD	INSTALLER	BUILD	components/echo-install/packages/PKGBUILD	-	Calamares source recipe; Installer-owned build input
+packages/README.md	SHARED	BUILD	packages/README.md	-	Repository/build documentation
+packages/calamares-3.4.2-2-x86_64.pkg.tar.zst	INSTALLER	ARTIFACT	build/repo/calamares-3.4.2-2-x86_64.pkg.tar.zst	-	Built Calamares package artifact; not a source of truth
+packages/echo.db	SHARED	BUILD	packages/echo.db	-	Tracked local repository symlinks
+packages/echo.db.tar.zst	SHARED	ARTIFACT	build/repo/echo.db.tar.zst	-	Local repository metadata artifact
+packages/echo.files	SHARED	BUILD	packages/echo.files	-	Tracked local repository symlinks
+packages/echo.files.tar.zst	SHARED	ARTIFACT	build/repo/echo.files.tar.zst	-	Local repository metadata artifact
 profile/airootfs/etc/calamares/modules/bootloader.conf	INSTALLER	INSTALL-LIVE	components/echo-install/calamares/modules/bootloader.conf	airootfs/etc/calamares/modules/bootloader.conf	Calamares installer; module existence verified against installed 3.4.2
 profile/airootfs/etc/calamares/modules/displaymanager.conf	INSTALLER	INSTALL-LIVE	components/echo-install/calamares/modules/displaymanager.conf	airootfs/etc/calamares/modules/displaymanager.conf	Calamares installer; module existence verified against installed 3.4.2
 profile/airootfs/etc/calamares/modules/fstab.conf	INSTALLER	INSTALL-LIVE	components/echo-install/calamares/modules/fstab.conf	airootfs/etc/calamares/modules/fstab.conf	Calamares installer; module existence verified against installed 3.4.2
-profile/airootfs/etc/calamares/modules/initcpiocfg.conf	INSTALLER	INSTALL-LIVE	components/echo-install/calamares/modules/initcpiocfg.conf	airootfs/etc/calamares/modules/initcpiocfg.conf	Calamares installer; module existence verified against installed 3.4.2
 profile/airootfs/etc/calamares/modules/initcpio.conf	INSTALLER	INSTALL-LIVE	components/echo-install/calamares/modules/initcpio.conf	airootfs/etc/calamares/modules/initcpio.conf	Calamares installer; module existence verified against installed 3.4.2
+profile/airootfs/etc/calamares/modules/initcpiocfg.conf	INSTALLER	INSTALL-LIVE	components/echo-install/calamares/modules/initcpiocfg.conf	airootfs/etc/calamares/modules/initcpiocfg.conf	Calamares installer; module existence verified against installed 3.4.2
 profile/airootfs/etc/calamares/modules/locale.conf	INSTALLER	INSTALL-LIVE	components/echo-install/calamares/modules/locale.conf	airootfs/etc/calamares/modules/locale.conf	Calamares installer; module existence verified against installed 3.4.2
 profile/airootfs/etc/calamares/modules/machineid.conf	INSTALLER	INSTALL-LIVE	components/echo-install/calamares/modules/machineid.conf	airootfs/etc/calamares/modules/machineid.conf	Calamares installer; module existence verified against installed 3.4.2
 profile/airootfs/etc/calamares/modules/mount.conf	INSTALLER	INSTALL-LIVE	components/echo-install/calamares/modules/mount.conf	airootfs/etc/calamares/modules/mount.conf	Calamares installer; module existence verified against installed 3.4.2
@@ -40,6 +51,7 @@ profile/airootfs/etc/systemd/network/20-wlan.network	CORE	COMMON	components/echo
 profile/airootfs/etc/systemd/network/20-wwan.network	CORE	COMMON	components/echo-core/airootfs/etc/systemd/network/20-wwan.network	airootfs/etc/systemd/network/20-wwan.network	
 profile/airootfs/etc/systemd/networkd.conf.d/ipv6-privacy-extensions.conf	CORE	COMMON	components/echo-core/airootfs/etc/systemd/networkd.conf.d/ipv6-privacy-extensions.conf	airootfs/etc/systemd/networkd.conf.d/ipv6-privacy-extensions.conf	
 profile/airootfs/etc/systemd/resolved.conf.d/archiso.conf	CORE	LIVE-INTENDED	components/echo-core/live/etc/systemd/resolved.conf.d/archiso.conf	airootfs/etc/systemd/resolved.conf.d/archiso.conf	Live mDNS policy; currently retained in target
+profile/airootfs/etc/systemd/system-generators/systemd-gpt-auto-generator	CORE	LIVE-INTENDED	components/echo-core/live/etc/systemd/system-generators/systemd-gpt-auto-generator	airootfs/etc/systemd/system-generators/systemd-gpt-auto-generator	
 profile/airootfs/etc/systemd/system/choose-mirror.service	CORE	LIVE-EXCLUDED	components/echo-core/live/etc/systemd/system/choose-mirror.service	airootfs/etc/systemd/system/choose-mirror.service	
 profile/airootfs/etc/systemd/system/cloud-init.target.wants/cloud-config.service	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/cloud-init.target.wants/cloud-config.service	airootfs/etc/systemd/system/cloud-init.target.wants/cloud-config.service	
 profile/airootfs/etc/systemd/system/cloud-init.target.wants/cloud-final.service	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/cloud-init.target.wants/cloud-final.service	airootfs/etc/systemd/system/cloud-init.target.wants/cloud-final.service	
@@ -52,17 +64,16 @@ profile/airootfs/etc/systemd/system/dbus-org.freedesktop.resolve1.service	CORE	C
 profile/airootfs/etc/systemd/system/dbus-org.freedesktop.timesync1.service	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/dbus-org.freedesktop.timesync1.service	airootfs/etc/systemd/system/dbus-org.freedesktop.timesync1.service	
 profile/airootfs/etc/systemd/system/display-manager.service	CORE	LIVE-EXCLUDED	components/echo-core/live/etc/systemd/system/display-manager.service	airootfs/etc/systemd/system/display-manager.service	Live DM link; Calamares recreates target link
 profile/airootfs/etc/systemd/system/etc-pacman.d-gnupg.mount	CORE	LIVE-INTENDED	components/echo-core/live/etc/systemd/system/etc-pacman.d-gnupg.mount	airootfs/etc/systemd/system/etc-pacman.d-gnupg.mount	Live pacman initialization; currently retained in target
-profile/airootfs/etc/systemd/system-generators/systemd-gpt-auto-generator	CORE	LIVE-INTENDED	components/echo-core/live/etc/systemd/system-generators/systemd-gpt-auto-generator	airootfs/etc/systemd/system-generators/systemd-gpt-auto-generator	
 profile/airootfs/etc/systemd/system/getty@tty1.service.d/autologin.conf	CORE	LIVE-EXCLUDED	components/echo-core/live/etc/systemd/system/getty@tty1.service.d/autologin.conf	airootfs/etc/systemd/system/getty@tty1.service.d/autologin.conf	
 profile/airootfs/etc/systemd/system/livecd-alsa-unmuter.service	CORE	LIVE-EXCLUDED	components/echo-core/live/etc/systemd/system/livecd-alsa-unmuter.service	airootfs/etc/systemd/system/livecd-alsa-unmuter.service	
 profile/airootfs/etc/systemd/system/livecd-talk.service	CORE	LIVE-EXCLUDED	components/echo-core/live/etc/systemd/system/livecd-talk.service	airootfs/etc/systemd/system/livecd-talk.service	
+profile/airootfs/etc/systemd/system/multi-user.target.wants/ModemManager.service	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/multi-user.target.wants/ModemManager.service	airootfs/etc/systemd/system/multi-user.target.wants/ModemManager.service	
 profile/airootfs/etc/systemd/system/multi-user.target.wants/choose-mirror.service	CORE	LIVE-EXCLUDED	components/echo-core/live/etc/systemd/system/multi-user.target.wants/choose-mirror.service	airootfs/etc/systemd/system/multi-user.target.wants/choose-mirror.service	
 profile/airootfs/etc/systemd/system/multi-user.target.wants/hv_fcopy_daemon.service	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/multi-user.target.wants/hv_fcopy_daemon.service	airootfs/etc/systemd/system/multi-user.target.wants/hv_fcopy_daemon.service	
 profile/airootfs/etc/systemd/system/multi-user.target.wants/hv_kvp_daemon.service	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/multi-user.target.wants/hv_kvp_daemon.service	airootfs/etc/systemd/system/multi-user.target.wants/hv_kvp_daemon.service	
 profile/airootfs/etc/systemd/system/multi-user.target.wants/hv_vss_daemon.service	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/multi-user.target.wants/hv_vss_daemon.service	airootfs/etc/systemd/system/multi-user.target.wants/hv_vss_daemon.service	
 profile/airootfs/etc/systemd/system/multi-user.target.wants/iwd.service	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/multi-user.target.wants/iwd.service	airootfs/etc/systemd/system/multi-user.target.wants/iwd.service	
 profile/airootfs/etc/systemd/system/multi-user.target.wants/livecd-talk.service	CORE	LIVE-EXCLUDED	components/echo-core/live/etc/systemd/system/multi-user.target.wants/livecd-talk.service	airootfs/etc/systemd/system/multi-user.target.wants/livecd-talk.service	
-profile/airootfs/etc/systemd/system/multi-user.target.wants/ModemManager.service	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/multi-user.target.wants/ModemManager.service	airootfs/etc/systemd/system/multi-user.target.wants/ModemManager.service	
 profile/airootfs/etc/systemd/system/multi-user.target.wants/pacman-init.service	CORE	LIVE-EXCLUDED	components/echo-core/live/etc/systemd/system/multi-user.target.wants/pacman-init.service	airootfs/etc/systemd/system/multi-user.target.wants/pacman-init.service	
 profile/airootfs/etc/systemd/system/multi-user.target.wants/sshd.service	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/multi-user.target.wants/sshd.service	airootfs/etc/systemd/system/multi-user.target.wants/sshd.service	
 profile/airootfs/etc/systemd/system/multi-user.target.wants/systemd-networkd.service	CORE	LIVE-EXCLUDED	components/echo-core/live/etc/systemd/system/multi-user.target.wants/systemd-networkd.service	airootfs/etc/systemd/system/multi-user.target.wants/systemd-networkd.service	
@@ -75,14 +86,17 @@ profile/airootfs/etc/systemd/system/pacman-init.service	CORE	LIVE-EXCLUDED	compo
 profile/airootfs/etc/systemd/system/sockets.target.wants/pcscd.socket	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/sockets.target.wants/pcscd.socket	airootfs/etc/systemd/system/sockets.target.wants/pcscd.socket	
 profile/airootfs/etc/systemd/system/sockets.target.wants/systemd-networkd.socket	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/sockets.target.wants/systemd-networkd.socket	airootfs/etc/systemd/system/sockets.target.wants/systemd-networkd.socket	
 profile/airootfs/etc/systemd/system/sound.target.wants/livecd-alsa-unmuter.service	CORE	LIVE-EXCLUDED	components/echo-core/live/etc/systemd/system/sound.target.wants/livecd-alsa-unmuter.service	airootfs/etc/systemd/system/sound.target.wants/livecd-alsa-unmuter.service	
-profile/airootfs/etc/systemd/system/sysinit.target.wants/systemd-timesyncd.service	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/sysinit.target.wants/systemd-timesyncd.service	airootfs/etc/systemd/system/sysinit.target.wants/systemd-timesyncd.service	
 profile/airootfs/etc/systemd/system/sysinit.target.wants/systemd-time-wait-sync.service	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/sysinit.target.wants/systemd-time-wait-sync.service	airootfs/etc/systemd/system/sysinit.target.wants/systemd-time-wait-sync.service	
+profile/airootfs/etc/systemd/system/sysinit.target.wants/systemd-timesyncd.service	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/sysinit.target.wants/systemd-timesyncd.service	airootfs/etc/systemd/system/sysinit.target.wants/systemd-timesyncd.service	
 profile/airootfs/etc/systemd/system/systemd-networkd-wait-online.service.d/wait-for-only-one-interface.conf	CORE	COMMON	components/echo-core/airootfs/etc/systemd/system/systemd-networkd-wait-online.service.d/wait-for-only-one-interface.conf	airootfs/etc/systemd/system/systemd-networkd-wait-online.service.d/wait-for-only-one-interface.conf	
 profile/airootfs/etc/sysusers.d/99-live-user.conf	CORE	LIVE-INTENDED	components/echo-core/live/etc/sysusers.d/99-live-user.conf	airootfs/etc/sysusers.d/99-live-user.conf	Live groups; currently leaks into target
-profile/airootfs/root/customize_airootfs.sh	CORE	LIVE-INTENDED	components/echo-core/live/root/customize_airootfs.sh	airootfs/root/customize_airootfs.sh	Build-time live account fixup; contains credential material, never copy content into docs
+profile/airootfs/etc/xdg/autostart/echoos-install.desktop	INSTALLER	LIVE-EXCLUDED	components/echo-install/config/live/xdg/autostart/echoos-install.desktop	airootfs/etc/xdg/autostart/echoos-install.desktop	XDG autostart for the live installer launcher; excluded from target via unpackfs exclude list
+profile/airootfs/home/archiso/Desktop/echoos-install.desktop	INSTALLER	LIVE-EXCLUDED	components/echo-install/config/home/archiso/Desktop/echoos-install.desktop	airootfs/home/archiso/Desktop/echoos-install.desktop	Install Echo OS desktop shortcut (0755); excluded via /home/archiso
 profile/airootfs/root/.gnupg/scdaemon.conf	CORE	LIVE-INTENDED	components/echo-core/live/root/.gnupg/scdaemon.conf	airootfs/root/.gnupg/scdaemon.conf	
 profile/airootfs/root/.zlogin	CORE	LIVE-INTENDED	components/echo-core/live/root/.zlogin	airootfs/root/.zlogin	
+profile/airootfs/root/customize_airootfs.sh	CORE	LIVE-INTENDED	components/echo-core/live/root/customize_airootfs.sh	airootfs/root/customize_airootfs.sh	Build-time live account fixup; contains credential material, never copy content into docs
 profile/airootfs/usr/local/bin/choose-mirror	CORE	LIVE-INTENDED	components/echo-core/live/usr/local/bin/choose-mirror	airootfs/usr/local/bin/choose-mirror	Live helper script/assets; currently retained in target
+profile/airootfs/usr/local/bin/echoos-install-launcher	INSTALLER	LIVE-EXCLUDED	components/echo-install/config/rootfs/usr/local/bin/echoos-install-launcher	airootfs/usr/local/bin/echoos-install-launcher	Single installer launch path (guard+log+pkexec); excluded via unpackfs exclude list
 profile/airootfs/usr/local/bin/livecd-sound	CORE	LIVE-INTENDED	components/echo-core/live/usr/local/bin/livecd-sound	airootfs/usr/local/bin/livecd-sound	Live helper script/assets; currently retained in target
 profile/airootfs/usr/local/share/livecd-sound/asound.conf.in	CORE	LIVE-INTENDED	components/echo-core/live/usr/local/share/livecd-sound/asound.conf.in	airootfs/usr/local/share/livecd-sound/asound.conf.in	Live helper script/assets; currently retained in target
 profile/bootstrap_packages	SHARED	BUILD	build/template/bootstrap_packages	bootstrap_packages	ArchISO bootstrap package list
@@ -98,22 +112,11 @@ profile/pacman.conf	SHARED	GENERATED	-	-	Generated from pacman.conf.in; currentl
 profile/pacman.conf.in	SHARED	BUILD	build/config/pacman.conf.in	pacman.conf	Build-time pacman template; single source for repository config
 profile/profiledef.sh	SHARED	BUILD	build/template/profiledef.sh	profiledef.sh	ArchISO profile definition; source of bootmodes/image/permissions
 profile/syslinux/archiso_head.cfg	BOOT	BOOT-LIVE	components/echo-boot/config/syslinux/archiso_head.cfg	syslinux/archiso_head.cfg	Live ISO boot menu; systemd-boot/syslinux bootmodes
-profile/syslinux/archiso_pxe.cfg	BOOT	BOOT-LIVE	components/echo-boot/config/syslinux/archiso_pxe.cfg	syslinux/archiso_pxe.cfg	Live ISO boot menu; systemd-boot/syslinux bootmodes
 profile/syslinux/archiso_pxe-linux.cfg	BOOT	BOOT-LIVE	components/echo-boot/config/syslinux/archiso_pxe-linux.cfg	syslinux/archiso_pxe-linux.cfg	Live ISO boot menu; systemd-boot/syslinux bootmodes
-profile/syslinux/archiso_sys.cfg	BOOT	BOOT-LIVE	components/echo-boot/config/syslinux/archiso_sys.cfg	syslinux/archiso_sys.cfg	Live ISO boot menu; systemd-boot/syslinux bootmodes
+profile/syslinux/archiso_pxe.cfg	BOOT	BOOT-LIVE	components/echo-boot/config/syslinux/archiso_pxe.cfg	syslinux/archiso_pxe.cfg	Live ISO boot menu; systemd-boot/syslinux bootmodes
 profile/syslinux/archiso_sys-linux.cfg	BOOT	BOOT-LIVE	components/echo-boot/config/syslinux/archiso_sys-linux.cfg	syslinux/archiso_sys-linux.cfg	Live ISO boot menu; systemd-boot/syslinux bootmodes
+profile/syslinux/archiso_sys.cfg	BOOT	BOOT-LIVE	components/echo-boot/config/syslinux/archiso_sys.cfg	syslinux/archiso_sys.cfg	Live ISO boot menu; systemd-boot/syslinux bootmodes
 profile/syslinux/archiso_tail.cfg	BOOT	BOOT-LIVE	components/echo-boot/config/syslinux/archiso_tail.cfg	syslinux/archiso_tail.cfg	Live ISO boot menu; systemd-boot/syslinux bootmodes
 profile/syslinux/splash.png	BOOT	BOOT-LIVE	components/echo-boot/config/syslinux/splash.png	syslinux/splash.png	Live ISO boot menu; systemd-boot/syslinux bootmodes
 profile/syslinux/syslinux.cfg	BOOT	BOOT-LIVE	components/echo-boot/config/syslinux/syslinux.cfg	syslinux/syslinux.cfg	Live ISO boot menu; systemd-boot/syslinux bootmodes
-build.sh	SHARED	BUILD	scripts/build.sh	-	Existing direct mkarchiso entry point; remains unchanged in Step 1
-.gitignore	SHARED	BUILD	.gitignore	-	Build-output ignore rules
-README.md	SHARED	BUILD	README.md	-	Repository/build documentation
 scripts/render-pacman-conf.sh	SHARED	BUILD	build/lib/render-pacman-conf.sh	-	Renders pacman.conf in place; future build/lib helper
-packages/PKGBUILD	INSTALLER	BUILD	components/echo-install/packages/PKGBUILD	-	Calamares source recipe; Installer-owned build input
-packages/README.md	SHARED	BUILD	packages/README.md	-	Repository/build documentation
-packages/calamares-3.4.2-2-x86_64.pkg.tar.zst	INSTALLER	ARTIFACT	build/repo/calamares-3.4.2-2-x86_64.pkg.tar.zst	-	Built Calamares package artifact; not a source of truth
-packages/echo.db	SHARED	BUILD	packages/echo.db	-	Tracked local repository symlinks
-packages/echo.files	SHARED	BUILD	packages/echo.files	-	Tracked local repository symlinks
-packages/echo.db.tar.zst	SHARED	ARTIFACT	build/repo/echo.db.tar.zst	-	Local repository metadata artifact
-packages/echo.files.tar.zst	SHARED	ARTIFACT	build/repo/echo.files.tar.zst	-	Local repository metadata artifact
-docs/phase-1-architecture-report.md	SHARED	BUILD	docs/phase-1-architecture-report.md	-	Existing Phase 1 report; preserved

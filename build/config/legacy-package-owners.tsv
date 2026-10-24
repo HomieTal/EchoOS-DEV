@@ -50,8 +50,11 @@ iw	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
 iwd	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
 jfsutils	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
 kbd	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+kconfig	INSTALLER	LIVE+TARGET	yes	no	KF6 library calamares links against; declared in echo-install manifest (2026.10.24 fix)
+kcrash	INSTALLER	LIVE+TARGET	yes	no	KF6 library calamares links against; declared in echo-install manifest (2026.10.24 fix)
 kitty-terminfo	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
 kmscon-terminfo	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+kpackage	INSTALLER	LIVE+TARGET	yes	no	KF6 library calamares links against; declared in echo-install manifest (2026.10.24 fix)
 ldns	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
 less	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
 lftp	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
@@ -89,11 +92,11 @@ nilfs-utils	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
 nmap	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
 ntfsprogs	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
 nvme-cli	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
-openconnect	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
 open-iscsi	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+open-vm-tools	CORE	LIVE+TARGET	yes	no	Base OS, desktop, services, or live tooling
+openconnect	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
 openpgp-card-tools	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
 openssh	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
-open-vm-tools	CORE	LIVE+TARGET	yes	no	Base OS, desktop, services, or live tooling
 openvpn	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
 partclone	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
 parted	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling

@@ -1,0 +1,55 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: no
+# SPDX-License-Identifier: CC0-1.0
+#
+# Single entry point for launching the Echo OS installer from the live
+# session.  Used by both the "Install Echo OS" desktop shortcut and the
+# XDG autostart entry, so there is exactly one launch path to reason
+# about.
+#
+# What it does:
+#   * refuses to start a second Calamares instance,
+#   * waits (bounded) for the graphical session to settle before
+#     escalating, so autostart does not race the desktop,
+#   * logs what happened to /tmp/echoos-install-launcher.log so a failed
+#     autostart is debuggable from a terminal,
+#   * escalates through pkexec, i.e. the stock Calamares polkit action
+#     (io.calamares.calamares.pkexec.run) - never by running the
+#     installer via sudo or a root wrapper.
+
+LOG=/tmp/echoos-install-launcher.log
+SESSION_SETTLE_SECS=10
+
+log() {
+    printf '%s %s\n' "$(date '+%F %T')" "$*" >> "$LOG"
+}
+
+# --- single instance -------------------------------------------------------
+if pgrep -x calamares >/dev/null 2>&1; then
+    log "calamares already running; not starting a second instance"
+    exit 0
+fi
+
+# --- session readiness -----------------------------------------------------
+# XDG autostart only runs inside an active session, but the desktop
+# (panel, polkit agent) may still be coming up.  The polkit rule grants
+# passwordless approval without an agent, so a bounded settle delay is
+# all that is needed; if DISPLAY is somehow missing we bail out with a
+# log entry instead of wedging the session.
+if [ -z "${DISPLAY:-}" ]; then
+    log "DISPLAY is not set; not starting (session not ready?)"
+    exit 1
+fi
+sleep "$SESSION_SETTLE_SECS"
+
+if ! command -v calamares >/dev/null 2>&1; then
+    log "calamares binary not found in PATH; image is broken"
+    exit 127
+fi
+if ! command -v pkexec >/dev/null 2>&1; then
+    log "pkexec not found; polkit missing from the image"
+    exit 127
+fi
+
+log "starting calamares (pkexec)"
+exec pkexec /usr/bin/calamares

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2034
 
-iso_name="archlinux"
+iso_name="echoos-fox"
 iso_label="ARCH_$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m)"
 iso_publisher="Arch Linux <https://archlinux.org>"
 iso_application="Arch Linux Live/Rescue DVD"
@@ -34,4 +34,7 @@ file_permissions=(
   ["/etc/sudoers.d"]="0:0:750"
   ["/etc/sysusers.d"]="0:0:755"
   ["/home/archiso"]="1000:1000:750"
+  ["/home/archiso/Desktop"]="1000:1000:755"
+  ["/home/archiso/Desktop/echoos-install.desktop"]="1000:1000:755"
+  ["/usr/local/bin/echoos-install-launcher"]="0:0:755"
 )

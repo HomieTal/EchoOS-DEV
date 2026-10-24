@@ -10,7 +10,6 @@ bind
 bolt
 brltty
 btrfs-progs
-calamares
 clonezilla
 cloud-init
 cryptsetup
@@ -23,8 +22,6 @@ dmraid
 dnsmasq
 dosfstools
 e2fsprogs
-edk2-shell
-efibootmgr
 espeakup
 ethtool
 exfatprogs
@@ -39,7 +36,6 @@ gpart
 gpm
 gptfdisk
 grml-zsh-config
-grub
 hdparm
 hicolor-icon-theme
 hyperv
@@ -70,8 +66,6 @@ man-db
 man-pages
 mc
 mdadm
-memtest86+
-memtest86+-efi
 mkinitcpio
 mkinitcpio-archiso
 mkinitcpio-nfs-utils
@@ -103,7 +97,6 @@ pptpclient
 pv
 python
 qemu-guest-agent
-refind
 reflector
 rsync
 rxvt-unicode-terminfo
@@ -115,7 +108,6 @@ smartmontools
 sof-firmware
 squashfs-tools
 sudo
-syslinux
 systemd-resolvconf
 tcpdump
 terminus-font
@@ -154,3 +146,14 @@ xorg-server
 xorg-setxkbmap
 xorg-xkbcomp
 zsh
+edk2-shell
+efibootmgr
+grub
+memtest86+
+memtest86+-efi
+refind
+syslinux
+calamares
+kconfig
+kcrash
+kpackage
