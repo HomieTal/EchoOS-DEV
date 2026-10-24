@@ -1,0 +1,160 @@
+package	owner	scope	x86_64	aarch64	note
+accountsservice	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+adwaita-icon-theme	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+alsa-utils	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+amd-ucode	CORE	LIVE+TARGET	yes	no	Base OS, desktop, services, or live tooling
+arch-install-scripts	CORE	LIVE+TARGET	yes	yes	Live/rescue tooling; not a Calamares dependency
+b43-fwcutter	CORE	LIVE+TARGET	yes	no	Base OS, desktop, services, or live tooling
+base	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+bcachefs-tools	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+bind	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+bolt	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+brltty	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+btrfs-progs	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+calamares	INSTALLER	LIVE+TARGET	yes	no	Calamares installer; intended live-only, but current file-level exclusions do not remove the package payload from target
+clonezilla	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+cloud-init	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+cryptsetup	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+darkhttpd	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+ddrescue	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+dhcpcd	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+diffutils	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+dmidecode	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+dmraid	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+dnsmasq	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+dosfstools	CORE	LIVE+TARGET	yes	yes	Core filesystem tooling; Installer may invoke it
+e2fsprogs	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+edk2-shell	BOOT	LIVE+TARGET	yes	yes	UEFI shell asset used by live boot menus
+efibootmgr	BOOT	LIVE+TARGET	yes	yes	EFI boot entry utility; Boot-owned and invoked by Installer
+espeakup	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+ethtool	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+exfatprogs	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+exo	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+f2fs-tools	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+fatresize	CORE	LIVE+TARGET	yes	yes	Core filesystem tooling; Installer may invoke it
+foot-terminfo	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+fsarchiver	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+garcon	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+ghostty-terminfo	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+gpart	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+gpm	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+gptfdisk	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+grml-zsh-config	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+grub	BOOT	LIVE+TARGET	yes	yes	Bootloader package; Boot owns policy/assets, Installer invokes it for target setup
+hdparm	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+hicolor-icon-theme	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+hyperv	CORE	LIVE+TARGET	yes	no	Base OS, desktop, services, or live tooling
+intel-ucode	CORE	LIVE+TARGET	yes	no	Base OS, desktop, services, or live tooling
+irssi	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+iw	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+iwd	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+jfsutils	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+kbd	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+kitty-terminfo	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+kmscon-terminfo	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+ldns	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+less	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+lftp	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+libfido2	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+libusb-compat	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+lightdm	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+lightdm-gtk-greeter	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+linux	CORE	LIVE+TARGET	yes	yes	Core kernel/initramfs tooling; Boot supplies the live initramfs configuration
+linux-atm	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+linux-dtbs	CORE	LIVE+TARGET	no	yes	Core kernel/initramfs tooling; Boot supplies the live initramfs configuration
+linux-firmware	CORE	LIVE+TARGET	yes	yes	Core kernel/initramfs tooling; Boot supplies the live initramfs configuration
+linux-firmware-marvell	CORE	LIVE+TARGET	yes	no	Core kernel/initramfs tooling; Boot supplies the live initramfs configuration
+linux-firmware-qcom	CORE	LIVE+TARGET	no	yes	Core kernel/initramfs tooling; Boot supplies the live initramfs configuration
+livecd-sounds	CORE	LIVE+TARGET	yes	yes	Live-oriented package; current file-level exclusions do not remove the package payload from target
+lsscsi	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+lvm2	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+lynx	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+man-db	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+man-pages	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+mc	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+mdadm	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+memtest86+	BOOT	LIVE+TARGET	yes	no	Live ISO memory-test boot entry
+memtest86+-efi	BOOT	LIVE+TARGET	yes	no	Live ISO memory-test boot entry
+mkinitcpio	CORE	LIVE+TARGET	yes	yes	Core kernel/initramfs tooling; Boot supplies the live initramfs configuration
+mkinitcpio-archiso	CORE	LIVE+TARGET	yes	yes	Live-oriented package; current file-level exclusions do not remove the package payload from target
+mkinitcpio-nfs-utils	CORE	LIVE+TARGET	yes	yes	Core kernel/initramfs tooling; Boot supplies the live initramfs configuration
+mmc-utils	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+modemmanager	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+mtools	CORE	LIVE+TARGET	yes	yes	Core FAT utilities; host mtools is a separate build prerequisite
+nano	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+nbd	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+ndisc6	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+nfs-utils	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+nilfs-utils	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+nmap	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+ntfsprogs	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+nvme-cli	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+openconnect	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+open-iscsi	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+openpgp-card-tools	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+openssh	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+open-vm-tools	CORE	LIVE+TARGET	yes	no	Base OS, desktop, services, or live tooling
+openvpn	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+partclone	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+parted	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+partimage	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+pcsclite	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+polkit	CORE	LIVE+TARGET	yes	yes	Core auth stack; Installer consumes it through a live polkit rule
+polkit-gnome	CORE	LIVE+TARGET	yes	yes	Core auth stack; Installer consumes it through a live polkit rule
+ppp	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+pptpclient	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+pv	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+python	CORE	LIVE+TARGET	yes	yes	General runtime/tooling; not assigned to Installer solely for Calamares
+qemu-guest-agent	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+refind	BOOT	LIVE+TARGET	yes	no	Optional Boot-owned bootloader; not selected by the current profile
+reflector	CORE	LIVE+TARGET	yes	no	Base OS, desktop, services, or live tooling
+rsync	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+rxvt-unicode-terminfo	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+screen	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+sdparm	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+sequoia-sq	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+sg3_utils	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+smartmontools	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+sof-firmware	CORE	LIVE+TARGET	yes	no	Base OS, desktop, services, or live tooling
+squashfs-tools	CORE	LIVE+TARGET	yes	yes	Live/rescue and build tooling; host mksquashfs is a separate build prerequisite
+stubble	BOOT	LIVE+TARGET	no	yes	aarch64 UEFI bootloader; Boot-owned
+sudo	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+syslinux	BOOT	LIVE+TARGET	yes	no	Live BIOS bootloader used by bios.syslinux
+systemd-resolvconf	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+tcpdump	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+terminus-font	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+testdisk	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+thunar	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+thunar-volman	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+tmux	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+tpm2-tools	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+tpm2-tss	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+ttf-dejavu	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+tumbler	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+udftools	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+usb_modeswitch	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+usbmuxd	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+usbutils	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+vim	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+virtualbox-guest-utils-nox	CORE	LIVE+TARGET	yes	no	Base OS, desktop, services, or live tooling
+vpnc	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+wireless-regdb	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+wireless_tools	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+wpa_supplicant	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+wvdial	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xdg-utils	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xfce4-appfinder	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xfce4-panel	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xfce4-power-manager	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xfce4-session	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xfce4-settings	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xfce4-terminal	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xfdesktop	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xfsprogs	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xfwm4	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xkeyboard-config	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xl2tpd	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xorg-server	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xorg-setxkbmap	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+xorg-xkbcomp	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling
+zsh	CORE	LIVE+TARGET	yes	yes	Base OS, desktop, services, or live tooling

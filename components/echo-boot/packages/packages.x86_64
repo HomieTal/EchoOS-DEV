@@ -1,0 +1,7 @@
+edk2-shell
+efibootmgr
+grub
+memtest86+
+memtest86+-efi
+refind
+syslinux

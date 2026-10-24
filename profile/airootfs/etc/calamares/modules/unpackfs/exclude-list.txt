@@ -22,3 +22,4 @@
 /usr/local/bin/Installation_guide
 /etc/polkit-1/rules.d/49-nopasswd_global.rules
 /etc/polkit-1/rules.d/50-calamares.rules
+/etc/security/faillock.conf

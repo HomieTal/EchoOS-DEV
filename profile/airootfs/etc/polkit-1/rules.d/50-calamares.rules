@@ -4,11 +4,11 @@
 // Allow the live user to start the graphical installer without being
 // asked for a password.
 //
-// The live account is passwordless, and the stock Calamares polkit
-// action (io.calamares.calamares.policy) requires authentication as an
-// administrator.  Without this rule the desktop launcher
-// ("Applications -> Install System", Exec=pkexec calamares) would sit
-// in front of an authentication dialog that can never be satisfied.
+// The stock Calamares polkit action (io.calamares.calamares.policy)
+// requires authentication as an administrator.  Without this rule the
+// desktop launcher ("Applications -> Install System", Exec=pkexec
+// calamares) would sit in front of an authentication dialog on every
+// start.
 //
 // This rule is excluded from the installed system (see
 // /etc/calamares/modules/unpackfs/exclude-list.txt).

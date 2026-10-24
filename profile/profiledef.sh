@@ -33,6 +33,5 @@ file_permissions=(
   ["/etc/polkit-1/rules.d"]="0:0:755"
   ["/etc/sudoers.d"]="0:0:750"
   ["/etc/sysusers.d"]="0:0:755"
-  ["/etc/systemd/system/display-manager.service"]="0:0:777"
   ["/home/archiso"]="1000:1000:750"
 )

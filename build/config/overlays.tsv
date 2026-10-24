@@ -1,0 +1,9 @@
+component	source_prefix	destination_prefix
+echo-core	airootfs	airootfs
+echo-core	live	airootfs
+echo-boot	config/efiboot	efiboot
+echo-boot	config/syslinux	syslinux
+echo-boot	config/grub	grub
+echo-boot	config/initramfs	airootfs/etc/mkinitcpio.conf.d
+echo-install	calamares	airootfs/etc/calamares
+echo-install	config/live	airootfs/etc
