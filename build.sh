@@ -10,6 +10,14 @@ OUT="${SCRIPT_DIR}/out"
 # is always absolute and correct for this checkout.
 "${SCRIPT_DIR}/scripts/render-pacman-conf.sh"
 
+# mkarchiso does not process profile/EFI/BOOT (rEFInd was wired in by
+# replacing the systemd-boot binary in the pacstrap dir), so the rEFInd
+# config must be kept in sync manually. If an ISO staging tree already
+# exists, refresh its refind.conf from the profile so fixes propagate.
+if [ -f "${PROFILE}/EFI/BOOT/refind.conf" ] && [ -d "${SCRIPT_DIR}/work/iso/EFI/BOOT" ]; then
+    sudo install -m 644 "${PROFILE}/EFI/BOOT/refind.conf" "${SCRIPT_DIR}/work/iso/EFI/BOOT/refind.conf"
+fi
+
 mkdir -p "${OUT}"
 echo "Profile: ${PROFILE}"
 echo "Output:  ${OUT}"

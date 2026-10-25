@@ -25,3 +25,4 @@ __pycache__/
 # Temporary
 /tmp/
 /var/tmp/
+backups/
