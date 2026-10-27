@@ -1,0 +1,24 @@
+# --- Echo OS branding for Calamares ---
+componentName: echoos
+
+strings:
+    productName:         "Echo OS"
+    shortProductName:    "Echo OS"
+    version:             "2.0"
+    shortVersion:        "2.0"
+    versionedName:       "Echo OS 2.0"
+    shortVersionedName:  "Echo OS 2.0"
+    bootloaderEntryName: "Echo OS"
+
+images:
+    productLogo:    "productLogo.png"
+    productIcon:    "productIcon.png"
+    productWelcome: "productWelcome.png"
+
+slideshow:               "slideshow.qml"
+slideshowAPI:            2
+
+style:
+    sidebarBackground:   "#292f36"
+    sidebarText:         "#ffffff"
+    sidebarTextSelect:   "#4cc2b1"

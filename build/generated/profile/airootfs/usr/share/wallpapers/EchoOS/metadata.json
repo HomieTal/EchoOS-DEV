@@ -1,0 +1,12 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Echo OS"
+            }
+        ],
+        "Id": "EchoOS",
+        "License": "CC-BY-SA-4.0",
+        "Name": "Echo OS"
+    }
+}

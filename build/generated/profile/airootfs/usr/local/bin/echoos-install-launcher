@@ -13,9 +13,9 @@
 #     escalating, so autostart does not race the desktop,
 #   * logs what happened to /tmp/echoos-install-launcher.log so a failed
 #     autostart is debuggable from a terminal,
-#   * escalates through pkexec, i.e. the stock Calamares polkit action
-#     (io.calamares.calamares.pkexec.run) - never by running the
-#     installer via sudo or a root wrapper.
+#   * escalates through pkexec to the installer-owned wrapper
+#     /usr/local/bin/echoos-calamares, which pins Qt to XWayland - never
+#     by running the installer via sudo.
 
 LOG=/tmp/echoos-install-launcher.log
 SESSION_SETTLE_SECS=10
@@ -34,10 +34,10 @@ fi
 # XDG autostart only runs inside an active session, but the desktop
 # (panel, polkit agent) may still be coming up.  The polkit rule grants
 # passwordless approval without an agent, so a bounded settle delay is
-# all that is needed; if DISPLAY is somehow missing we bail out with a
-# log entry instead of wedging the session.
-if [ -z "${DISPLAY:-}" ]; then
-    log "DISPLAY is not set; not starting (session not ready?)"
+# all that is needed; if no XWayland display is present we bail out with
+# a log entry instead of wedging the session.
+if [ -z "${DISPLAY:-}" ] || [ -z "${XAUTHORITY:-}" ] || [ ! -r "${XAUTHORITY}" ]; then
+    log "no usable XWayland display (DISPLAY='${DISPLAY:-}' XAUTHORITY='${XAUTHORITY:-}'); not starting"
     exit 1
 fi
 sleep "$SESSION_SETTLE_SECS"
@@ -51,5 +51,14 @@ if ! command -v pkexec >/dev/null 2>&1; then
     exit 127
 fi
 
-log "starting calamares (pkexec)"
-exec pkexec /usr/bin/calamares
+# pkexec starts the installer with a sanitised environment: DISPLAY,
+# XAUTHORITY and XDG_RUNTIME_DIR are dropped, so Calamares would abort
+# with "could not connect to display".  Forward the live session's
+# XWayland connection details explicitly through env(1); the wrapper
+# pins QT_QPA_PLATFORM to xcb.
+log "starting calamares (pkexec env DISPLAY=$DISPLAY /usr/local/bin/echoos-calamares)"
+exec pkexec /usr/bin/env \
+    DISPLAY="$DISPLAY" \
+    XAUTHORITY="$XAUTHORITY" \
+    XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
+    /usr/local/bin/echoos-calamares

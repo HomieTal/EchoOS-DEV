@@ -1,6 +1,0 @@
-This is a live environment. To install the system to a disk, start the
-graphical installer from the Applications menu (entry: "Install System").
-
-For Wi-Fi, authenticate to the wireless network using the iwctl utility.
-For mobile broadband (WWAN) modems, connect with the mmcli utility.
-Ethernet, WLAN and WWAN interfaces using DHCP should work automatically.

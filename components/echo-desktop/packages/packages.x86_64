@@ -1,0 +1,31 @@
+# Echo Desktop - KDE Plasma 6 graphical environment.
+# Everything here is desktop/session owned; base OS runtime stays in echo-core.
+accountsservice
+adwaita-icon-theme
+ark
+breeze-gtk
+dolphin
+hicolor-icon-theme
+kate
+konsole
+kwallet-pam
+noto-fonts
+pipewire
+pipewire-alsa
+pipewire-pulse
+plasma-meta
+polkit-kde-agent
+qt6-wayland
+sddm
+ttf-dejavu
+wireplumber
+xcb-util-cursor
+xdg-desktop-portal
+xdg-desktop-portal-kde
+xdg-user-dirs
+xdg-utils
+xkeyboard-config
+xorg-server
+xorg-setxkbmap
+xorg-xwayland
+xorg-xkbcomp

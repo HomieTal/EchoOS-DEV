@@ -1,0 +1,2 @@
+# Echo Desktop has no aarch64 package set yet; the x86_64 manifest is the
+# only supported desktop target for the Fox ISO.

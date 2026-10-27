@@ -3,4 +3,5 @@ efibootmgr
 memtest86+
 memtest86+-efi
 refind
+grub
 syslinux

@@ -5,7 +5,10 @@ echo-boot	config/efiboot	efiboot
 echo-boot	config/syslinux	syslinux
 echo-boot	config/grub	grub
 echo-boot	config/initramfs	airootfs/etc/mkinitcpio.conf.d
+echo-boot	config/EFI	EFI
+echo-desktop	airootfs	airootfs
 echo-install	calamares	airootfs/etc/calamares
 echo-install	config/live	airootfs/etc
 echo-install	config/home	airootfs/home
 echo-install	config/rootfs	airootfs
+echo-install	calamares-branding	airootfs/usr/share/calamares/branding

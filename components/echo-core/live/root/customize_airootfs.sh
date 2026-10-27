@@ -35,9 +35,9 @@ LIVE_GECOS="Live user"
 # SHA-512 hash of the live user's password ("archiso").
 LIVE_PASSWD='$6$echooslive$3CTNE3UTs.g04ztg.2woIVqWsMDUAgG.TO9aNRD1fhGAud84r2zaBrvEXbINMqeOvPOY3OKZqkg4oa.jxavd5.'
 
-# Groups the live session needs: "autologin" is what
-# /etc/pam.d/lightdm-autologin checks, the rest are the usual desktop
-# memberships (screen, audio, removable media, ...).
+# Groups the live session needs: "autologin" is the conventional group for
+# passwordless display-manager login, the rest are the usual desktop
+# memberships (wheel, audio, removable media, ...).
 LIVE_GROUPS=(autologin wheel audio video storage network lp)
 
 # --- account -------------------------------------------------------------
