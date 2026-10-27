@@ -1,0 +1,10 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Path
+Target = usr/lib/os-release
+
+[Action]
+Description = Applying Echo OS system identity
+When = PostTransaction
+Exec = /usr/bin/cp /usr/share/echoos/os-release /usr/lib/os-release
