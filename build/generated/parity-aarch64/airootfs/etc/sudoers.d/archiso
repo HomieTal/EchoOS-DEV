@@ -1,8 +1,0 @@
-# SPDX-FileCopyrightText: no
-# SPDX-License-Identifier: CC0-1.0
-#
-# The live session has no password, so the live user gets passwordless
-# sudo.  This file is deliberately *not* copied into the installed
-# system (see /etc/calamares/modules/unpackfs/exclude-list.txt); there,
-# sudo access is granted through the "wheel" group by the users module.
-archiso ALL=(ALL:ALL) NOPASSWD: ALL

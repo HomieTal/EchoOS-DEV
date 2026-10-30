@@ -1,0 +1,17 @@
+{
+    "KPackageStructure": "Plasma/LookAndFeel",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Echo OS"
+            }
+        ],
+        "Description": "Echo OS desktop defaults: Breeze styling, Echo panel layout and wallpaper",
+        "Id": "org.echoos.desktop",
+        "License": "GPL-3.0-or-later",
+        "Name": "Echo OS",
+        "Website": "https://github.com/HomieTal/EchoOS-DEV"
+    },
+    "Keywords": "Desktop;Workspace;Appearance;Look and Feel;Logout;Lock;Suspend;Shutdown;Hibernate;",
+    "X-Plasma-APIVersion": "2"
+}

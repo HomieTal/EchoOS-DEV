@@ -1,5 +1,5 @@
 This is a live environment. To install the system to a disk, start the
-graphical installer from the Applications menu (entry: "Install System").
+graphical installer from the Applications menu (entry: "Install Echo OS").
 
 For Wi-Fi, authenticate to the wireless network using the iwctl utility.
 For mobile broadband (WWAN) modems, connect with the mmcli utility.

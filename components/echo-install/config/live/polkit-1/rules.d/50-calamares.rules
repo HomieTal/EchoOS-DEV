@@ -20,3 +20,15 @@ polkit.addRule(function (action, subject) {
         return polkit.Result.YES;
     }
 });
+
+// pkexec on the installer wrapper is a generic pkexec action (Calamares'
+// own policy file matches /usr/bin/calamares, not the XWayland wrapper).
+// The live account already has passwordless sudo, so this only keeps the
+// autostart path from stalling on a polkit dialog.
+polkit.addRule(function (action, subject) {
+    if (action.id === "org.freedesktop.policykit.exec" &&
+        subject.user === "archiso" &&
+        subject.local === true) {
+        return polkit.Result.YES;
+    }
+});
