@@ -39,11 +39,25 @@ fi
 # passwordless approval without an agent, so a bounded settle delay is
 # all that is needed; if neither an X display nor a Wayland display is
 # present we bail out with a log entry instead of wedging the session.
+#
+# The delay is a *maximum* of SESSION_SETTLE_SECS: the loop polls every
+# second and stops early as soon as polkitd is up (the 50-calamares.rules
+# file approves the pkexec action without an authentication agent), so
+# the installer window appears within a couple of seconds on a healthy
+# live session instead of after a fixed 10-second sleep.
 if [ -z "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ]; then
     log "no graphical display in the session; not starting"
     exit 1
 fi
-sleep "$SESSION_SETTLE_SECS"
+elapsed=0
+while [ "$elapsed" -lt "$SESSION_SETTLE_SECS" ]; do
+    if pgrep -x polkitd >/dev/null 2>&1; then
+        sleep 2
+        break
+    fi
+    sleep 1
+    elapsed=$((elapsed + 1))
+done
 
 # Calamares runs as root through pkexec.  On Plasma Wayland that means it
 # cannot talk to the user's Wayland compositor, so it falls back to Qt's

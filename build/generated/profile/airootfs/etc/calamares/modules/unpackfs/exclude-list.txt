@@ -2,7 +2,7 @@
 /etc/pacman.d/hooks/
 /etc/ssh/sshd_config.d/10-archiso.conf
 /etc/sudoers.d/archiso
-/etc/sddm.conf.d/20-echoos-live-autologin.conf
+/etc/sddm.conf.d/
 /etc/systemd/system/getty@tty1.service.d/autologin.conf
 /etc/systemd/system/display-manager.service
 /etc/systemd/system/choose-mirror.service
@@ -25,3 +25,4 @@
 /etc/security/faillock.conf
 /etc/xdg/autostart/echoos-install.desktop
 /usr/local/bin/echoos-install-launcher
+/usr/local/bin/echoos-calamares

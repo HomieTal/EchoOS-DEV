@@ -14,11 +14,22 @@ WALLPAPER=/usr/share/wallpapers/EchoOS/contents/images/2560x1280.jpg
 
 [ -e "$MARKER" ] && exit 0
 [ -r "$WALLPAPER" ] || exit 0
+command -v plasma-apply-wallpaperimage >/dev/null 2>&1 || exit 0
 
 mkdir -p "$CONFIG_HOME"
 
-if command -v plasma-apply-wallpaperimage >/dev/null 2>&1; then
-    plasma-apply-wallpaperimage "$WALLPAPER" >/dev/null 2>&1 || true
-fi
+# The autostart entry runs as soon as the session starts, which can be before
+# plasmashell has registered its D-Bus service.  Keep retrying for a bounded
+# time and record success only after the wallpaper was actually applied, so a
+# premature run does not permanently suppress branding on later logins.
+attempt=0
+while [ "$attempt" -lt 30 ]; do
+    if plasma-apply-wallpaperimage "$WALLPAPER" >/dev/null 2>&1; then
+        : > "$MARKER"
+        exit 0
+    fi
+    attempt=$((attempt + 1))
+    sleep 2
+done
 
-: > "$MARKER"
+exit 0

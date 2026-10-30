@@ -222,7 +222,11 @@ grep -Eq '^[[:space:]]*-[[:space:]]*sddm$' "$inst/modules/displaymanager.conf" |
 if grep -Eq '^[[:space:]]*-[[:space:]]*lightdm$' "$inst/modules/displaymanager.conf"; then bad "Calamares displaymanager still selects LightDM"; fi
 grep -Eq 'name: "sddm\.service"' "$inst/modules/services-systemd.conf" || bad "Calamares does not enable sddm.service"
 if grep -Eq 'name: "lightdm\.service"' "$inst/modules/services-systemd.conf"; then bad "Calamares still enables lightdm.service"; fi
+# The live SDDM autologin is excluded from the target either as the exact
+# drop-in file or as the whole /etc/sddm.conf.d/ directory (the current
+# exclude list removes the directory, which covers the file).
 grep -Fq '/etc/sddm.conf.d/20-echoos-live-autologin.conf' "$inst/modules/unpackfs/exclude-list.txt" \
+  || grep -Fq '/etc/sddm.conf.d/' "$inst/modules/unpackfs/exclude-list.txt" \
   || bad "live SDDM autologin is not excluded from the target"
 grep -Fq '/etc/systemd/system/display-manager.service' "$inst/modules/unpackfs/exclude-list.txt" \
   || bad "live display-manager link is not excluded from the target"
@@ -294,6 +298,11 @@ expected_extra = {
     'airootfs/usr/share/sddm/themes/echoos/theme.conf',
     'airootfs/usr/share/wallpapers/EchoOS/contents/images/2560x1280.jpg',
     'airootfs/usr/share/wallpapers/EchoOS/metadata.json',
+    # Files that moved from the legacy profile tree into components during
+    # the v3.0.0 migration (they live in echo-install and echo-boot now).
+    'airootfs/etc/pacman.d/hooks/echoos-os-release.hook',
+    'airootfs/usr/local/bin/echoos-calamares',
+    'airootfs/usr/share/echoos/os-release',
     'airootfs/usr/share/libalpm/hooks/echoos-refind-sync.hook',
 }
 missing = sorted((legacy - removed) - built)

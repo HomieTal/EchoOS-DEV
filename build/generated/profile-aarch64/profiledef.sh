@@ -32,6 +32,7 @@ file_permissions=(
   ["/etc/sddm.conf.d/20-echoos-live-autologin.conf"]="0:0:644"
   ["/usr/share/sddm/themes/echoos"]="0:0:755"
   ["/usr/share/sddm/themes/echoos/Main.qml"]="0:0:644"
+  ["/usr/share/sddm/themes/echoos/metadata.desktop"]="0:0:644"
   ["/usr/share/sddm/themes/echoos/theme.conf"]="0:0:644"
   ["/etc/xdg/autostart/echoos-plasma-branding.desktop"]="0:0:644"
   ["/etc/polkit-1/rules.d"]="0:0:755"

@@ -1,0 +1,12 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: no
+# SPDX-License-Identifier: CC0-1.0
+#
+# Runs Calamares inside the live Plasma Wayland session.
+#
+# Calamares is a Qt/X11-oriented application; Plasma 6.8 no longer ships an
+# X11 session, so the installer is started through XWayland with the Qt
+# platform pinned to xcb. pkexec cannot pass environment variables, so the
+# pinning lives here and the launcher escalates to this wrapper.
+export QT_QPA_PLATFORM=xcb
+exec /usr/bin/calamares "$@"

@@ -6,7 +6,10 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import SddmComponents 2.0
+// NOTE: do not import SddmComponents here.  It exports its own ComboBox,
+// Button, TextBox, etc., which shadow the QtQuick.Controls types used below
+// and have an incompatible API.  This theme only needs the `sddm`,
+// `userModel` and `sessionModel` context properties provided by the greeter.
 
 Rectangle {
     id: root

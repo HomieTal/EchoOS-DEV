@@ -1,0 +1,12 @@
+NAME="Echo OS"
+PRETTY_NAME="Echo OS 2.0 (Fox)"
+ID=echoos
+ID_LIKE=arch
+BUILD_ID=rolling
+VERSION_ID="2.0"
+VERSION="2.0 (Fox)"
+ANSI_COLOR="38;2;76;194;177"
+HOME_URL="https://homietal.github.io/Echo/"
+DOCUMENTATION_URL="https://homietal.github.io/Echo/"
+SUPPORT_URL="https://github.com/HomieTal/EchoOS-DEV"
+BUG_REPORT_URL="https://github.com/HomieTal/EchoOS-DEV/issues"

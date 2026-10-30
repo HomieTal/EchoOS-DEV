@@ -1,25 +1,58 @@
 #!/bin/bash
-# Finalises the rEFInd boot setup of the freshly installed Echo OS system.
+# Finalises the boot-loader setup of the freshly installed Echo OS system.
 #
-# Why this script exists:
+# Invoked in two modes:
 #
-# 1. `refind-install` (run by shellprocess-refindboot.conf) installs the
-#    rEFInd loader to the ESP (mounted at /boot/efi by the installer's
-#    partition layer) and, inside a chroot, may not leave a usable NVRAM
-#    entry behind.  Most firmware falls back to the removable-media path
-#    \EFI\BOOT\BOOTX64.EFI; without it the installed system cannot boot
-#    at all (VMware reports "No compatible bootloader found").  So this
-#    script publishes the same rEFInd loader as that fallback entry.
+#   * "--bootstrap"  by shellprocess-refindboot.conf (Calamares, chrooted
+#     into the mounted target during installation).  Installs the loader
+#     binaries in addition to everything else.
+#   * no argument    by /usr/share/libalpm/hooks/echoos-refind-sync.hook
+#     (and can be re-run by hand on an installed system).  Only refreshes
+#     the configuration and runtime files; never reinstalls the loader.
 #
-# 2. `refind-install` seeds /boot/refind_linux.conf from /proc/cmdline,
-#    but the job runs chrooted into the target, where /proc/cmdline is
-#    still the *live ISO's* archiso command line (root=/dev/loop0 and
-#    friends) and cannot boot the installed system.  So this script
-#    writes explicit parameters, derived from the target's own
-#    /etc/fstab, right next to the installed kernel.
+# The two firmware schemes this script serves:
 #
-# Runs inside the target chroot (see shellprocess-refindboot.conf); the
-# target root prefix can be overridden with $ECHOO_PREFIX for testing.
+# UEFI (--bootstrap and hook mode)
+#   1. In bootstrap mode: `refind-install --alldrivers --yes` installs the
+#      rEFInd loader to the ESP (mounted at /boot by the installer's
+#      partition layer, see modules/partition.conf).  Inside a chroot it
+#      may not leave a usable NVRAM entry behind.  Most firmware falls
+#      back to the removable-media path \EFI\BOOT\BOOTX64.EFI (or
+#      \EFI\BOOT\BOOTAA64.EFI on arm64); without it the installed system
+#      cannot boot at all (VMware reports "No compatible bootloader
+#      found").  So this script publishes the same rEFInd loader as that
+#      fallback entry.
+#   2. `refind-install` seeds /boot/refind_linux.conf from /proc/cmdline,
+#      but during installation the job runs chrooted into the target,
+#      where /proc/cmdline is still the *live ISO's* archiso command
+#      line (root=/dev/loop0 and friends) and cannot boot the installed
+#      system.  So this script writes explicit parameters, derived from
+#      the target's own /etc/fstab, right next to the installed kernel.
+#   3. Whether the kernel already sits on the ESP (the supported scheme,
+#      ESP mounted at /boot) or in /boot of the ext4 root (older layout,
+#      ESP at /boot/efi): the ESP gets the kernel and its initramfs and a
+#      deterministic manual refind.conf menuentry that loads them with
+#      firmware-native FAT access.  Booting never depends on rEFInd's
+#      ext4 driver, which 0.14.2 cannot load multi-megabyte kernel images
+#      (observed on VMware/OVMF with e2fsprogs 1.47 defaults).
+#
+# BIOS (--bootstrap)
+#   There is no ESP.  grub-install (i386-pc) is written to the target
+#   disk's MBR and grub-mkconfig generates /boot/grub/grub.cfg.  In hook
+#   mode only grub-mkconfig is refreshed.
+#
+# ESP discovery is deliberately generous: the target's /etc/fstab is the
+# first source, and the mounts visible in the (chrooted, but shared)
+# mount namespace via findmnt are the fallback.  During installation the
+# ESP is necessarily mounted (refind-install/grub would have failed
+# otherwise), so this second source is available even in partition
+# layouts where Calamares wrote no vfat fstab line.
+#
+# For testing outside a chroot the target root prefix can be overridden
+# with $ECHOO_PREFIX.
+#
+# Everything is logged to /var/log/echoos-bootloader.log, which survives
+# the installation inside the target root.
 #
 # SPDX-License-Identifier: CC0-1.0
 
@@ -33,55 +66,40 @@ if [ ! -f "$fstab" ]; then
     exit 1
 fi
 
-# --- locate the ESP mountpoint from the target fstab (vfat entry) -------
-esp=""
-while read -r src mountpoint fstype options _; do
-    if [ "$fstype" = "vfat" ] && [ -n "$mountpoint" ]; then
-        esp="${prefix}${mountpoint}"
-        break
-    fi
-done < "$fstab"
-if [ -z "$esp" ] || [ ! -d "$esp" ]; then
-    echo "ERROR: no mounted ESP found in $fstab; cannot publish the fallback loader" >&2
-    exit 1
+log_dir="$(dirname "${prefix}/var/log/echoos-bootloader.log")"
+log_file="${prefix}/var/log/echoos-bootloader.log"
+mkdir -p "$log_dir"
+exec > >(tee -a "$log_file") 2>&1
+
+mode_update="yes"   # default: hook mode (configuration refresh only)
+if [ "${1:-}" = "--bootstrap" ]; then
+    mode_update=""
 fi
 
-# --- locate the rEFInd loader that refind-install placed on the ESP -----
-refind_src="$esp/EFI/refind/refind_x64.efi"
-if [ ! -f "$refind_src" ]; then
-    refind_src="/usr/share/refind/refind_x64.efi"
+# --- firmware mode ---------------------------------------------------------
+# The normal detection path is /sys/firmware/efi on the running (chrooted)
+# system.  ECHOO_TEST_FIRMWARE allows the harness to pin the branch when
+# running the script outside a chroot (its value is "efi" or "bios").
+if [ -n "${ECHOO_TEST_FIRMWARE:-}" ]; then
+    firmware="$ECHOO_TEST_FIRMWARE"
+elif [ -d /sys/firmware/efi ]; then
+    firmware="efi"
+else
+    firmware="bios"
 fi
-if [ ! -f "$refind_src" ]; then
-    echo "ERROR: rEFInd loader not found in $esp/EFI/refind or /usr/share/refind" >&2
-    exit 1
+# arm64 ships its loader leaf names as refind_aa64.efi / BOOTAA64.EFI.
+if [ "$(uname -m)" = "aarch64" ]; then
+    refind_bin="refind_aa64.efi"
+    fallback_bin="BOOTAA64.EFI"
+    grub_target="arm64-efi"
+else
+    refind_bin="refind_x64.efi"
+    fallback_bin="BOOTX64.EFI"
+    grub_target="i386-pc"
 fi
 
-# --- publish it as the removable-media fallback \EFI\BOOT\BOOTX64.EFI ---
-mkdir -p "$esp/EFI/BOOT"
-install -m 0644 "$refind_src" "$esp/EFI/BOOT/BOOTX64.EFI"
-if [ -f "$esp/EFI/refind/BOOT.CSV" ]; then
-    install -m 0644 "$esp/EFI/refind/BOOT.CSV" "$esp/EFI/BOOT/BOOT.CSV"
-fi
-echo "echoos-refindconf-write: published $refind_src as $esp/EFI/BOOT/BOOTX64.EFI"
-
-# --- locate the installed kernel and its directory -----------------------
-kernel=""
-for cand in "$prefix/boot/vmlinuz-linux" "$esp/vmlinuz-linux"; do
-    if [ -f "$cand" ]; then
-        kernel="$cand"
-        break
-    fi
-done
-if [ -z "$kernel" ]; then
-    kernel="$(find "$prefix/boot" "$esp" -maxdepth 4 -name 'vmlinuz-linux' 2>/dev/null | head -n 1)"
-fi
-if [ -z "$kernel" ]; then
-    echo "ERROR: no vmlinuz-linux under $prefix/boot or $esp; cannot write refind_linux.conf" >&2
-    exit 1
-fi
-kdir="$(dirname "$kernel")"
-
-rootsrc=""; rootfstype=""; rootoptions=""
+# --- parse the target fstab ------------------------------------------------
+rootsrc=""
 while read -r src mountpoint fstype options _; do
     if [ "$mountpoint" = "/" ]; then
         rootsrc="$src"
@@ -92,12 +110,12 @@ while read -r src mountpoint fstype options _; do
 done < "$fstab"
 
 if [ -z "$rootsrc" ]; then
-    echo "ERROR: no / entry found in $fstab; cannot write refind_linux.conf" >&2
+    echo "ERROR: no / entry found in $fstab; cannot configure the boot loader" >&2
     exit 1
 fi
 
 rootcmd="root=$rootsrc"
-if [ "$rootfstype" = "btrfs" ]; then
+if [ "${rootfstype:-}" = "btrfs" ]; then
     subvol="$(echo "$rootoptions" | tr ',' '\n' | sed -n 's/^subvol=/subvol=/p' | head -n 1)"
     if [ -z "$subvol" ]; then
         echo "WARNING: btrfs / entry without subvol= in $fstab; rEFInd default subvolume will be used" >&2
@@ -106,11 +124,178 @@ if [ "$rootfstype" = "btrfs" ]; then
     fi
 fi
 
-cat > "$kdir/refind_linux.conf" <<EOF
+if [ "$firmware" = "efi" ]; then
+    # ================================================================== UEFI
+    if [ -z "$mode_update" ]; then
+        # --bootstrap: install the loader first, so the ESP discovery
+        # below can also use the freshly seeded EFI/refind directory as
+        # a mountpoint hint.
+        echo "echoos-refindconf-write: installing rEFInd (refind-install --alldrivers --yes)"
+        refind-install --alldrivers --yes
+    fi
+
+    # --- locate the ESP ------------------------------------------------------
+    # 1st source: a vfat entry in the target fstab.
+    esp=""
+    esp_from_fstab=""
+    while read -r src mountpoint fstype options _; do
+        if [ "$fstype" = "vfat" ] || [ "$fstype" = "msdos" ]; then
+            if [ -n "$mountpoint" ]; then
+                esp_from_fstab="${prefix}${mountpoint}"
+                break
+            fi
+        fi
+    done < "$fstab"
+
+    # 2nd source: spread over the candidate mountpoints, prefer one that
+    # already carries the published loader (definitive proof), then the
+    # conventional paths.
+    for cand in "$esp_from_fstab" \
+                "${prefix}/boot/efi" \
+                "${prefix}/boot" \
+                "${prefix}/efi"; do
+        [ -n "$cand" ] || continue
+        [ -d "$cand" ] || continue
+        if [ -f "$cand/EFI/refind/$refind_bin" ] || [ -f "$cand/EFI/BOOT/$fallback_bin" ]; then
+            esp="$cand"
+            break
+        fi
+    done
+
+    # 3rd source: the mounts visible to findmnt (the chroot shares the
+    # live system's mount table through the bind-mounted /proc).  The
+    # ESP must be mounted at this point: the loader install above would
+    # otherwise have failed.
+    if [ -z "$esp" ]; then
+        while read -r target src fstype _; do
+            [ "$fstype" = "vfat" ] || [ "$fstype" = "msdos" ] || continue
+            case "$target" in
+                /boot|/boot/efi|/efi)
+                    esp="${prefix}${target}"
+                    break ;;
+            esac
+        done < <(findmnt -rno TARGET,SOURCE,FSTYPE 2>/dev/null)
+    fi
+
+    if [ -z "$esp" ] || [ ! -d "$esp" ]; then
+        echo "ERROR: no mounted ESP found (fstab, conventional mountpoints and findmnt all empty); cannot publish the fallback loader" >&2
+        exit 1
+    fi
+    echo "echoos-refindconf-write: ESP is $esp"
+
+    # --- locate the rEFInd loader -------------------------------------------
+    refind_src=""
+    for cand in "$esp/EFI/refind/$refind_bin" /usr/share/refind/"$refind_bin"; do
+        if [ -f "$cand" ]; then
+            refind_src="$cand"
+            break
+        fi
+    done
+    if [ -z "$refind_src" ]; then
+        echo "ERROR: rEFInd loader not found in $esp/EFI/refind or /usr/share/refind" >&2
+        exit 1
+    fi
+
+    # --- publish it as the removable-media fallback --------------------------
+    mkdir -p "$esp/EFI/BOOT"
+    install -m 0644 "$refind_src" "$esp/EFI/BOOT/$fallback_bin"
+    if [ -f "$esp/EFI/refind/BOOT.CSV" ]; then
+        install -m 0644 "$esp/EFI/refind/BOOT.CSV" "$esp/EFI/BOOT/BOOT.CSV"
+    fi
+    echo "echoos-refindconf-write: published $refind_src as $esp/EFI/BOOT/$fallback_bin"
+
+    # --- locate the installed kernel and its directory -----------------------
+    kernel=""
+    for cand in "$prefix/boot/vmlinuz-linux" "$esp/vmlinuz-linux"; do
+        if [ -f "$cand" ]; then
+            kernel="$cand"
+            break
+        fi
+    done
+    if [ -z "$kernel" ]; then
+        kernel="$(find "$prefix/boot" "$esp" -maxdepth 4 -name 'vmlinuz-linux' 2>/dev/null | head -n 1)"
+    fi
+    if [ -z "$kernel" ]; then
+        echo "ERROR: no vmlinuz-linux under $prefix/boot or $esp; cannot write refind_linux.conf" >&2
+        exit 1
+    fi
+    kdir="$(dirname "$kernel")"
+
+    if [ ! -f "$kdir/initramfs-linux.img" ]; then
+        echo "ERROR: no initramfs-linux.img next to the kernel; cannot configure boot files" >&2
+        exit 1
+    fi
+
+    echo "echoos-refindconf-write: kernel is $kernel (initramfs $(dirname "$kernel")/initramfs-linux.img)"
+    # If the kernel already lives on the ESP (ESP mounted at /boot), the
+    # destination equals the source; installing a file onto itself is a
+    # coreutils error, so only copy when the paths really differ.
+    if [ "$kdir" != "$esp" ]; then
+        install -m 0644 "$kernel" "$esp/vmlinuz-linux"
+        install -m 0644 "$kdir/initramfs-linux.img" "$esp/initramfs-linux.img"
+        echo "echoos-refindconf-write: published $(basename "$kernel") and $(basename "$kdir/initramfs-linux.img") on $esp"
+    else
+        echo "echoos-refindconf-write: boot files already on the ESP ($esp); no copy needed"
+    fi
+
+    # --- refind_linux.conf ---------------------------------------------------
+    cat > "$kdir/refind_linux.conf" <<EOF
 "Boot with standard options"  "ro $rootcmd quiet splash"
 "Boot to single-user mode"    "ro $rootcmd single"
 "Boot with minimal options"   "ro $rootcmd"
 EOF
+    chmod 644 "$kdir/refind_linux.conf"
+    echo "echoos-refindconf-write: wrote $kdir/refind_linux.conf with: rootcmd [$rootcmd]"
+    if [ "$kdir" != "$esp" ]; then
+        cp "$kdir/refind_linux.conf" "$esp/refind_linux.conf"
+        chmod 644 "$esp/refind_linux.conf"
+    fi
 
-chmod 644 "$kdir/refind_linux.conf"
-echo "echoos-refindconf-write: wrote $kdir/refind_linux.conf with: rootcmd [$rootcmd]"
+    # --- write the deterministic rEFInd configuration ------------------------
+    refind_conf_body=$(cat <<EOF
+# Echo OS installed-system boot configuration.
+# Written by /usr/local/sbin/echoos-refindconf-write at install time.
+timeout 5
+default_selection "Echo OS"
+showtools shutdown,reboot,firmware
+scanfor manual
+
+menuentry "Echo OS" {
+    icon \\EFI\\refind\\icons\\os_arch.png
+    loader \\vmlinuz-linux
+    initrd \\initramfs-linux.img
+    options "ro $rootcmd quiet splash"
+}
+EOF
+)
+    printf '%s\n' "$refind_conf_body" > "$esp/EFI/refind/refind.conf"
+    printf '%s\n' "$refind_conf_body" > "$esp/EFI/BOOT/refind.conf"
+    chmod 644 "$esp/EFI/refind/refind.conf" "$esp/EFI/BOOT/refind.conf"
+    echo "echoos-refindconf-write: wrote manual boot menu to EFI/refind/refind.conf and EFI/BOOT/refind.conf"
+else
+    # ================================================================== BIOS
+    if [ "$(uname -m)" != "x86_64" ]; then
+        echo "ERROR: legacy BIOS boot with $grub_target is not supported on $(uname -m)" >&2
+        exit 1
+    fi
+    if [ -n "$mode_update" ]; then
+        echo "echoos-refindconf-write: refreshing grub.cfg (kernel update)"
+        grub-mkconfig -o /boot/grub/grub.cfg
+    else
+        echo "echoos-refindconf-write: installing GRUB ($grub_target)"
+        # The chroot's / is a bind mount; findmnt may report the source with
+        # a "/[/]" bracket suffix, which lsblk cannot resolve.
+        rootsrc_clean="$(findmnt -rno SOURCE / | sed 's/\[.*//')"
+        disk="/dev/$(lsblk -rno PKNAME "$rootsrc_clean" | head -n 1)"
+        echo "echoos-refindconf-write: target disk $disk"
+        if [ ! -b "$disk" ]; then
+            echo "ERROR: $disk is not a block device; cannot install GRUB" >&2
+            exit 1
+        fi
+        grub-install --target="$grub_target" --boot-directory=/boot --recheck "$disk"
+        grub-mkconfig -o /boot/grub/grub.cfg
+    fi
+    echo "echoos-refindconf-write: BIOS boot setup complete (rootcmd for reference: [$rootcmd])"
+fi
+
+echo "echoos-refindconf-write: done"
