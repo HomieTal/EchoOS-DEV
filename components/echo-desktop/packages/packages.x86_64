@@ -1,0 +1,24 @@
+# Echo Desktop: KDE Plasma 6, KWin, SDDM and the desktop application set.
+accountsservice
+adwaita-icon-theme
+ark
+breeze-cursors
+dolphin
+gwenview
+hicolor-icon-theme
+kate
+kcalc
+konsole
+kwalletmanager
+plasma-meta
+qt6-wayland
+sddm
+sddm-kcm
+ttf-dejavu
+xdg-user-dirs
+xdg-utils
+xkeyboard-config
+xorg-server
+xorg-setxkbmap
+xorg-xhost
+xorg-xkbcomp

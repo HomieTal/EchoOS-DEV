@@ -1,0 +1,24 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: no
+# SPDX-License-Identifier: CC0-1.0
+#
+# Apply the Echo OS wallpaper once per user, on the first Plasma login.
+# Doing it here (instead of shipping a version-specific appletsrc) keeps the
+# default layout intact and works on both the live session and installed
+# systems.
+set -eu
+
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+MARKER="$CONFIG_HOME/echoos-desktop-branded"
+WALLPAPER=/usr/share/wallpapers/EchoOS/contents/images/2560x1280.jpg
+
+[ -e "$MARKER" ] && exit 0
+[ -r "$WALLPAPER" ] || exit 0
+
+mkdir -p "$CONFIG_HOME"
+
+if command -v plasma-apply-wallpaperimage >/dev/null 2>&1; then
+    plasma-apply-wallpaperimage "$WALLPAPER" >/dev/null 2>&1 || true
+fi
+
+: > "$MARKER"

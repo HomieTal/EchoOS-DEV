@@ -5,6 +5,17 @@ echo-boot	config/efiboot	efiboot
 echo-boot	config/syslinux	syslinux
 echo-boot	config/grub	grub
 echo-boot	config/initramfs	airootfs/etc/mkinitcpio.conf.d
+echo-boot	config/EFI	EFI
+echo-boot	config/efi	efi
+echo-boot	config/boot	boot
+echo-boot	config/loader	loader
+echo-boot	config/fonts	fonts
+echo-boot	config/icons	icons
+echo-boot	config/refind.conf	refind.conf
+echo-boot	config/refind_x64.efi	refind_x64.efi
+echo-boot	config/airootfs	airootfs
+echo-desktop	config/airootfs	airootfs
+echo-desktop	config/live	airootfs
 echo-install	calamares	airootfs/etc/calamares
 echo-install	config/live	airootfs/etc
 echo-install	config/home	airootfs/home

@@ -1,0 +1,10 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = linux
+
+[Action]
+Description = Republishing the kernel and initramfs on the ESP
+When = PostTransaction
+Exec = /usr/local/sbin/echoos-refindconf-write

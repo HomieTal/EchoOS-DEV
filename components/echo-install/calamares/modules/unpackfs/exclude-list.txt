@@ -2,7 +2,7 @@
 /etc/pacman.d/hooks/
 /etc/ssh/sshd_config.d/10-archiso.conf
 /etc/sudoers.d/archiso
-/etc/lightdm/lightdm.conf.d/
+/etc/sddm.conf.d/20-echoos-live-autologin.conf
 /etc/systemd/system/getty@tty1.service.d/autologin.conf
 /etc/systemd/system/display-manager.service
 /etc/systemd/system/choose-mirror.service

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Echo OS Desktop Branding
+Comment=Apply the Echo OS wallpaper on first login
+Exec=/usr/local/bin/echoos-desktop-branding
+TryExec=/usr/local/bin/echoos-desktop-branding
+Icon=preferences-desktop-wallpaper
+Terminal=false
+NoDisplay=true
+X-KDE-autostart-phase=2

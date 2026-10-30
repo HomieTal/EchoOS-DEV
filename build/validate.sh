@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-# Step 2 validation for the Echo OS component skeleton with Boot populated.
-# Read-only with respect to profile/. Never builds ISO, invokes mkarchiso,
-# modifies profile/, or uses Git.
+# Echo OS validation.
+#
+# Checks the four-component model, package ownership, the assembled profile,
+# the KDE Plasma/SDDM desktop contract, and the live/target boundary.
+# Read-only with respect to profile/, components/, and build/generated/:
+# assembly is performed in a temporary directory.
 set -eu
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -17,20 +20,26 @@ ok() { printf 'OK   %s\n' "$*"; }
 bad() { printf 'FAIL %s\n' "$*" >&2; failures=$((failures + 1)); }
 info() { printf 'INFO %s\n' "$*"; }
 
+components_map=build/config/components.tsv
+overlays_map=build/config/overlays.tsv
+
+# ---------------------------------------------------------------------------
+# Structure
+# ---------------------------------------------------------------------------
 required_dirs=(
+  components/echo-core/packages
+  components/echo-core/airootfs
+  components/echo-core/live
   components/echo-boot/packages
   components/echo-boot/config
-  components/echo-boot/hooks
+  components/echo-desktop/packages
+  components/echo-desktop/config/airootfs
+  components/echo-desktop/config/live
   components/echo-install/packages
-  components/echo-install/config
   components/echo-install/calamares
-  components/echo-core/packages
-  components/echo-core/config
-  components/echo-core/airootfs
-  components/echo-core/services
+  components/echo-install/config
   build/config
   build/template
-  build/generated
 )
 for d in "${required_dirs[@]}"; do
   if [[ -d "$d" ]]; then ok "directory $d"; else bad "missing directory $d"; fi
@@ -38,390 +47,296 @@ done
 
 required_files=(
   components/README.md
+  components/echo-core/README.md
+  components/echo-core/packages/packages.x86_64
+  components/echo-core/packages/packages.aarch64
   components/echo-boot/README.md
-  components/echo-boot/hooks/README.md
   components/echo-boot/packages/packages.x86_64
   components/echo-boot/packages/packages.aarch64
+  components/echo-desktop/README.md
+  components/echo-desktop/packages/packages.x86_64
+  components/echo-desktop/packages/packages.aarch64
   components/echo-install/README.md
   components/echo-install/packages/packages.x86_64
   components/echo-install/packages/packages.aarch64
-  components/echo-install/packages/PKGBUILD
-  components/echo-core/README.md
-  build/README.md
   build/assemble.sh
   build/validate.sh
-  build/config/README.md
   build/config/components.tsv
   build/config/overlays.tsv
-  build/config/legacy-file-owners.tsv
-  build/config/legacy-package-owners.tsv
-  build/config/profile-baseline.tsv
   build/config/pacman.conf.in
-  build/template/README.md
   build/template/profiledef.sh
   build/template/bootstrap_packages
-  docs/phase-1-architecture-report.md
-  docs/step-1-component-map.md
-  docs/step-1-assembly-contract.md
-  docs/step-1-parity-check.md
-  docs/step-2-echo-boot-report.md
-  docs/step-3-echo-install-report.md
 )
 for f in "${required_files[@]}"; do
   if [[ -s "$f" ]]; then ok "file $f"; else bad "missing or empty file $f"; fi
 done
 
-# Shared build templates must match their authoritative profile sources.
-# This prevents the migration-window copies from becoming independent config.
-shared_fail=0
-check_shared_template() {
-  local src=$1 dst=$2
-  if [[ ! -f "$src" || ! -f "$dst" ]]; then
-    bad "shared template missing: $dst (source $src)"
-    shared_fail=$((shared_fail + 1)) || true
-    return 0
-  fi
-  if ! cmp -s "$src" "$dst"; then
-    bad "shared template differs from source: $dst != $src"
-    shared_fail=$((shared_fail + 1)) || true
-  fi
-  local smode dmode
-  smode=$(stat -c '%a' "$src")
-  dmode=$(stat -c '%a' "$dst")
-  if [[ "$smode" != "$dmode" ]]; then
-    bad "shared template mode differs: $dst ($dmode vs $smode)"
-    shared_fail=$((shared_fail + 1)) || true
-  fi
-  if [[ -L "$dst" ]]; then
-    bad "shared template must be a regular file, not a symlink: $dst"
-    shared_fail=$((shared_fail + 1)) || true
-  fi
-}
-check_shared_template profile/profiledef.sh build/template/profiledef.sh
-check_shared_template profile/bootstrap_packages build/template/bootstrap_packages
-check_shared_template profile/pacman.conf.in build/config/pacman.conf.in
-
-# Placeholders/fields that assembly depends on must survive unchanged.
-if [[ -f build/template/profiledef.sh ]]; then
-  grep -q "bootmodes=('bios.syslinux'" build/template/profiledef.sh || { bad "profiledef template lost bios.syslinux bootmode"; shared_fail=$((shared_fail + 1)) || true; }
-  grep -q "'uefi.systemd-boot'" build/template/profiledef.sh || { bad "profiledef template lost uefi.systemd-boot bootmode"; shared_fail=$((shared_fail + 1)) || true; }
-  grep -q '^pacman_conf="pacman.conf"' build/template/profiledef.sh || { bad "profiledef template lost pacman_conf"; shared_fail=$((shared_fail + 1)) || true; }
-fi
-if [[ -f build/config/pacman.conf.in ]]; then
-  grep -q '@LOCAL_REPO_PATH@' build/config/pacman.conf.in || { bad "pacman template lost @LOCAL_REPO_PATH@"; shared_fail=$((shared_fail + 1)) || true; }
-  grep -q '^\[echo\]' build/config/pacman.conf.in || { bad "pacman template lost [echo] repository"; shared_fail=$((shared_fail + 1)) || true; }
-fi
-if [[ $shared_fail -eq 0 ]]; then ok "shared templates match authoritative sources"; fi
-
-file_map=build/config/legacy-file-owners.tsv
-package_map=build/config/legacy-package-owners.tsv
-components_map=build/config/components.tsv
-overlays_map=build/config/overlays.tsv
-baseline=build/config/profile-baseline.tsv
-
-for hdr in "$file_map" "$package_map" "$components_map" "$overlays_map" "$baseline"; do
-  if [[ -s "$hdr" ]]; then ok "exists $hdr"; else bad "missing $hdr"; fi
-done
-
 check_header() {
   local file=$1 expected=$2 actual
   actual="$(head -n 1 "$file" 2>/dev/null || true)"
-  if [[ "$actual" == "$expected" ]]; then
-    ok "header $file"
-  else
-    bad "unexpected header in $file"
-  fi
+  if [[ "$actual" == "$expected" ]]; then ok "header $file"; else bad "unexpected header in $file"; fi
 }
-check_header "$file_map" $'legacy_path\towner\tscope\tfuture_path\tprofile_destination\tnote'
-check_header "$package_map" $'package\towner\tscope\tx86_64\taarch64\tnote'
 check_header "$components_map" $'order\tcomponent\troot\trequires'
 check_header "$overlays_map" $'component\tsource_prefix\tdestination_prefix'
-check_header "$baseline" $'path\ttype\tmode\tsize\tcontent_sha256\tlink_target'
 
-# Component definitions
-while IFS=$'\t' read -r order component component_root requires; do
+# ---------------------------------------------------------------------------
+# Component order and dependencies
+# ---------------------------------------------------------------------------
+declare -A order_of=() seen_order=()
+last=0
+while IFS=$'\t' read -r order component root requires; do
   [[ "$order" == "order" ]] && continue
-  if [[ -d "$component_root" && -s "$component_root/README.md" ]]; then
-    ok "component $component root and README"
-  else
-    bad "component $component has no root/README"
-  fi
+  if [[ ! "$order" =~ ^[0-9]+$ ]]; then bad "invalid component order $order"; continue; fi
+  if [[ -n "${seen_order[$order]:-}" ]]; then bad "duplicate component order $order"; fi
+  seen_order[$order]=1
+  order_of[$component]=$order
+  if [[ "$order" -lt "$last" ]]; then bad "component order not ascending at $component"; fi
+  last=$order
+  if [[ -d "$root" && -s "$root/README.md" ]]; then ok "component $component root and README"; else bad "component $component has no root/README"; fi
+  for a in x86_64 aarch64; do
+    [[ -f "$root/packages/packages.$a" ]] || bad "component $component has no packages.$a"
+  done
 done < "$components_map"
 
-# Echo Core payloads populated in Step 4; Echo Install populated in Step 3
-c=components/echo-core
-find "$c" -type f ! -name README.md ! -name .gitkeep -print | LC_ALL=C sort > "$TMPDIR/${c//\//_}_payload"
-if [[ -s "$TMPDIR/${c//\//_}_payload" ]]; then
-  ok "$c has payload files"
-else
-  ok "$c payload limited to README/.gitkeep"
-fi
-ok "echo-install payload allowed"
-
-# Boot future paths must exist and match sources
-boot_fail=0
-while IFS=$'\t' read -r legacy owner scope future destination note; do
-  [[ "$legacy" == "legacy_path" ]] && continue
-  [[ "$owner" == "BOOT" ]] || continue
-  if [[ ! -e "$future" && ! -L "$future" ]]; then
-    bad "Boot future path missing: $future (from $legacy)"
-    boot_fail=$((boot_fail + 1)) || true
-    continue
-  fi
-  if [[ -L "$future" && -L "$legacy" ]]; then
-    f_link=$(readlink "$future"); l_link=$(readlink "$legacy")
-    if [[ "$f_link" == "$l_link" ]]; then ok "symlink match $legacy -> $future"; else bad "symlink mismatch $legacy"; boot_fail=$((boot_fail + 1)) || true; fi
-  elif [[ -f "$future" && ! -L "$future" && -f "$legacy" && ! -L "$legacy" ]]; then
-    if cmp -s "$legacy" "$future"; then ok "content match $legacy -> $future"; else bad "content mismatch $legacy -> $future"; boot_fail=$((boot_fail + 1)) || true; fi
-    f_mode=$(stat -c '%a' "$future"); l_mode=$(stat -c '%a' "$legacy")
-    if [[ "$f_mode" == "$l_mode" ]]; then ok "mode match $legacy"; else bad "mode mismatch $legacy ($l_mode vs $f_mode)"; boot_fail=$((boot_fail + 1)) || true; fi
-  else
-    bad "type mismatch $legacy <-> $future"
-    boot_fail=$((boot_fail + 1)) || true
-  fi
-done < "$file_map"
-
-# Allowed files under echo-boot
-awk -F '\t' 'NR>1 && $2=="BOOT" {print $4}' "$file_map" | LC_ALL=C sort > "$TMPDIR/boot_allowed"
-printf '%s\n' "components/echo-boot/README.md" "components/echo-boot/hooks/README.md" >> "$TMPDIR/boot_allowed"
-printf '%s\n' "components/echo-boot/packages/packages.x86_64" "components/echo-boot/packages/packages.aarch64" >> "$TMPDIR/boot_allowed"
-LC_ALL=C sort -u "$TMPDIR/boot_allowed" > "$TMPDIR/boot_allowed_unique"
-find components/echo-boot -type f ! -name .gitkeep -print | LC_ALL=C sort > "$TMPDIR/boot_actual"
-if comm -23 "$TMPDIR/boot_actual" "$TMPDIR/boot_allowed_unique" | grep -q .; then
-  bad "unexpected files under components/echo-boot"
-  comm -23 "$TMPDIR/boot_actual" "$TMPDIR/boot_allowed_unique" >&2
-  boot_fail=$((boot_fail + 1)) || true
-fi
-if comm -13 "$TMPDIR/boot_actual" "$TMPDIR/boot_allowed_unique" | grep -q .; then
-  bad "missing expected files under components/echo-boot"
-  comm -13 "$TMPDIR/boot_actual" "$TMPDIR/boot_allowed_unique" >&2
-  boot_fail=$((boot_fail + 1)) || true
-fi
-if [[ $boot_fail -eq 0 ]]; then ok "Echo Boot files match ownership map and are byte-for-byte with sources"; fi
-# Core future paths must exist and match sources
-core_fail=0
-while IFS=$'\t' read -r legacy owner scope future destination note; do
-  [[ "$legacy" == "legacy_path" ]] && continue
-  [[ "$owner" == "CORE" ]] || continue
-  if [[ ! -e "$future" && ! -L "$future" ]]; then
-    bad "Core future path missing: $future (from $legacy)"
-    core_fail=$((core_fail + 1)) || true
-    continue
-  fi
-  if [[ -L "$future" && -L "$legacy" ]]; then
-    f_link=$(readlink "$future"); l_link=$(readlink "$legacy")
-    if [[ "$f_link" == "$l_link" ]]; then ok "core symlink match $legacy -> $future"; else bad "core symlink mismatch $legacy"; core_fail=$((core_fail + 1)) || true; fi
-  elif [[ -f "$future" && ! -L "$future" && -f "$legacy" && ! -L "$legacy" ]]; then
-    if cmp -s "$legacy" "$future"; then ok "core content match $legacy -> $future"; else bad "core content mismatch $legacy -> $future"; core_fail=$((core_fail + 1)) || true; fi
-    f_mode=$(stat -c '%a' "$future"); l_mode=$(stat -c '%a' "$legacy")
-    if [[ "$f_mode" == "$l_mode" ]]; then ok "core mode match $legacy"; else bad "core mode mismatch $legacy ($l_mode vs $f_mode)"; core_fail=$((core_fail + 1)) || true; fi
-  else
-    bad "core type mismatch $legacy <-> $future"
-    core_fail=$((core_fail + 1)) || true
-  fi
-done < "$file_map"
-if [[ $core_fail -eq 0 ]]; then ok "Echo Core files match ownership map and sources"; fi
-
-
-# Installer files must match sources
-installer_fail=0
-while IFS=$'\t' read -r legacy owner scope future destination note; do
-  [[ "$legacy" == "legacy_path" ]] && continue
-  [[ "$owner" == "INSTALLER" ]] || continue
-  # skip artifacts for content comparison if dest not present as source copy? artifact is built; we copied to component packages; compare if both exist
-  if [[ ! -e "$future" && ! -L "$future" ]]; then
-    bad "Installer future path missing: $future (from $legacy)"
-    installer_fail=$((installer_fail + 1)) || true
-    continue
-  fi
-  if [[ -L "$future" && -L "$legacy" ]]; then
-    f_link=$(readlink "$future"); l_link=$(readlink "$legacy")
-    if [[ "$f_link" == "$l_link" ]]; then ok "symlink match $legacy -> $future"; else bad "symlink mismatch $legacy"; installer_fail=$((installer_fail + 1)) || true; fi
-  elif [[ -f "$future" && ! -L "$future" && -f "$legacy" && ! -L "$legacy" && "$legacy" == *.pkg.tar.zst ]]; then
-    if [[ "$(stat -c '%s' "$legacy")" == "$(stat -c '%s' "$future")" ]]; then ok "artifact size match $legacy -> $future"; else bad "artifact size mismatch $legacy -> $future"; installer_fail=$((installer_fail + 1)) || true; fi
-    f_mode=$(stat -c '%a' "$future"); l_mode=$(stat -c '%a' "$legacy")
-    if [[ "$f_mode" == "$l_mode" ]]; then ok "mode match $legacy"; else bad "mode mismatch $legacy ($l_mode vs $f_mode)"; installer_fail=$((installer_fail + 1)) || true; fi
-  elif [[ -f "$future" && ! -L "$future" && -f "$legacy" && ! -L "$legacy" ]]; then
-    if cmp -s "$legacy" "$future"; then ok "content match $legacy -> $future"; else bad "content mismatch $legacy -> $future"; installer_fail=$((installer_fail + 1)) || true; fi
-    f_mode=$(stat -c '%a' "$future"); l_mode=$(stat -c '%a' "$legacy")
-    if [[ "$f_mode" == "$l_mode" ]]; then ok "mode match $legacy"; else bad "mode mismatch $legacy ($l_mode vs $f_mode)"; installer_fail=$((installer_fail + 1)) || true; fi
-  else
-    bad "type mismatch $legacy <-> $future"
-    installer_fail=$((installer_fail + 1)) || true
-  fi
-done < "$file_map"
-
-# Allowed files under echo-install
-awk -F '\t' 'NR>1 && $2=="INSTALLER" {print $4}' "$file_map" | LC_ALL=C sort > "$TMPDIR/install_allowed"
-printf '%s\n' "components/echo-install/README.md" >> "$TMPDIR/install_allowed"
-printf '%s\n' "components/echo-install/packages/PKGBUILD" "components/echo-install/packages/packages.x86_64" "components/echo-install/packages/packages.aarch64" "components/echo-install/packages/calamares-3.4.2-2-x86_64.pkg.tar.zst" >> "$TMPDIR/install_allowed"
-LC_ALL=C sort -u "$TMPDIR/install_allowed" > "$TMPDIR/install_allowed_unique"
-find components/echo-install -type f ! -name .gitkeep -print | LC_ALL=C sort > "$TMPDIR/install_actual"
-# Ignore map entries that point outside the component root
-LC_ALL=C grep -v '^build/repo/' "$TMPDIR/install_allowed_unique" > "$TMPDIR/install_allowed_unique2" || true
-if LC_ALL=C comm -23 "$TMPDIR/install_actual" "$TMPDIR/install_allowed_unique2" | grep -q .; then
-  bad "unexpected files under components/echo-install"
-  LC_ALL=C comm -23 "$TMPDIR/install_actual" "$TMPDIR/install_allowed_unique2" >&2
-  installer_fail=$((installer_fail + 1)) || true
-fi
-if LC_ALL=C comm -13 "$TMPDIR/install_actual" "$TMPDIR/install_allowed_unique2" | grep -q .; then
-  bad "missing expected files under components/echo-install"
-  LC_ALL=C comm -13 "$TMPDIR/install_actual" "$TMPDIR/install_allowed_unique2" >&2
-  installer_fail=$((installer_fail + 1)) || true
-fi
-if [[ $installer_fail -eq 0 ]]; then ok "Echo Install files match ownership map and sources"; fi
-# Core package manifests
-core_pkg_fail=0
-for arch in x86_64 aarch64; do
-  manifest="components/echo-core/packages/packages.$arch"
-  [[ -f "$manifest" ]] || { bad "missing core manifest $manifest"; core_pkg_fail=$((core_pkg_fail + 1)) || true; continue; }
-  if [[ "$arch" == "x86_64" ]]; then col=4; else col=5; fi
-  awk -F '\t' -v c="$col" 'NR>1 && $2=="CORE" && $c=="yes" {print $1}' "$package_map" | LC_ALL=C sort -u > "$TMPDIR/core_pkgs_$arch"
-  grep -v '^[[:space:]]*$' "$manifest" | grep -v '^[[:space:]]*#' | sed 's/[[:space:]]//g' | LC_ALL=C sort -u > "$TMPDIR/core_manifest_$arch"
-  if grep -vE '^[A-Za-z0-9@._+-]+$' "$TMPDIR/core_manifest_$arch" | grep -q .; then bad "invalid package name syntax in core manifest $arch"; core_pkg_fail=$((core_pkg_fail + 1)) || true; fi
-  if [[ -s "$TMPDIR/core_manifest_$arch" ]] && [[ "$(uniq -d "$TMPDIR/core_manifest_$arch" | wc -l)" -gt 0 ]]; then bad "duplicate in core manifest $arch"; core_pkg_fail=$((core_pkg_fail + 1)) || true; fi
-  if ! LC_ALL=C sort -c "$TMPDIR/core_manifest_$arch" 2>/dev/null; then bad "core manifest $arch not sorted"; core_pkg_fail=$((core_pkg_fail + 1)) || true; fi
-  if ! cmp -s "$TMPDIR/core_pkgs_$arch" "$TMPDIR/core_manifest_$arch"; then
-    bad "core manifest $arch does not match Core-owned packages"
-    comm -3 "$TMPDIR/core_pkgs_$arch" "$TMPDIR/core_manifest_$arch" >&2
-    core_pkg_fail=$((core_pkg_fail + 1)) || true
-  fi
+for c in echo-core echo-boot echo-desktop echo-install; do
+  [[ -n "${order_of[$c]:-}" ]] || bad "component missing from components.tsv: $c"
 done
-if [[ $core_pkg_fail -eq 0 ]]; then ok "core manifests match Core-owned packages"; fi
+[[ "${order_of[echo-core]:-0}" -lt "${order_of[echo-desktop]:-0}" ]] || bad "echo-desktop must come after echo-core"
+[[ "${order_of[echo-boot]:-0}" -lt "${order_of[echo-install]:-0}" ]] || bad "echo-install must come after echo-boot"
+[[ "${order_of[echo-desktop]:-0}" -lt "${order_of[echo-install]:-0}" ]] || bad "echo-install must come after echo-desktop"
 
+while IFS=$'\t' read -r order component root requires; do
+  [[ "$order" == "order" ]] && continue
+  [[ "$requires" == "-" || -z "$requires" ]] && continue
+  IFS=',' read -ra reqs <<< "$requires"
+  for req in "${reqs[@]}"; do
+    [[ -n "${order_of[$req]:-}" ]] || bad "$component depends on unknown component $req"
+    if [[ -n "${order_of[$req]:-}" && "${order_of[$req]}" -ge "${order_of[$component]}" ]]; then
+      bad "$component dependency $req is not ordered before it"
+    fi
+  done
+done < "$components_map"
 
-# Boot package manifests
-for arch in x86_64 aarch64; do
-  manifest="components/echo-boot/packages/packages.$arch"
-  [[ -s "$manifest" ]] || { bad "empty boot manifest $manifest"; continue; }
-  awk -F '\t' -v arch="$arch" 'NR>1 && $2=="BOOT" && $((arch=="x86_64"?4:5))=="yes" {print $1}' "$package_map" | LC_ALL=C sort > "$TMPDIR/boot_pkgs_$arch"
-  grep -v '^[[:space:]]*$' "$manifest" | grep -v '^[[:space:]]*#' | sed 's/[[:space:]]//g' | LC_ALL=C sort > "$TMPDIR/boot_manifest_$arch"
-  if grep -vE '^[A-Za-z0-9@._+-]+$' "$TMPDIR/boot_manifest_$arch" | grep -q .; then bad "invalid package name syntax in boot manifest $arch"; fi
-  if [[ -s "$TMPDIR/boot_manifest_$arch" ]] && [[ "$(uniq -d "$TMPDIR/boot_manifest_$arch" | wc -l)" -gt 0 ]]; then bad "duplicate in boot manifest $arch"; fi
-  if ! LC_ALL=C sort -c "$TMPDIR/boot_manifest_$arch" 2>/dev/null; then bad "boot manifest $arch not sorted"; fi
-  if comm -3 "$TMPDIR/boot_pkgs_$arch" "$TMPDIR/boot_manifest_$arch" | grep -q .; then
-    bad "boot manifest $arch differs from Boot ownership"
-    comm -3 "$TMPDIR/boot_pkgs_$arch" "$TMPDIR/boot_manifest_$arch" >&2
-  else
-    ok "boot manifest $arch matches Boot-owned packages"
-  fi
-done
+# Overlay prefixes must exist.  Exact file overlays are allowed.
+while IFS=$'\t' read -r component source_prefix destination_prefix; do
+  [[ "$component" == "component" ]] && continue
+  [[ -n "${order_of[$component]:-}" ]] || bad "overlay for unknown component $component"
+  [[ -e "components/$component/$source_prefix" || -L "components/$component/$source_prefix" ]] \
+    || bad "overlay source missing: components/$component/$source_prefix"
+  case "$destination_prefix" in
+    ""|/*|..|../*|*/..|*/../*) bad "unsafe overlay destination: $destination_prefix" ;;
+  esac
+done < "$overlays_map"
 
-# Installer package manifests
-for arch in x86_64 aarch64; do
-  manifest="components/echo-install/packages/packages.$arch"
-  [[ -f "$manifest" ]] || { bad "missing installer manifest $manifest"; continue; }
-  if [[ "$arch" == "x86_64" ]]; then col=4; else col=5; fi
-  awk -F '\t' -v c="$col" 'NR>1 && $2=="INSTALLER" && $c=="yes" {print $1}' "$package_map" | LC_ALL=C sort > "$TMPDIR/install_pkgs_$arch"
-  grep -v '^[[:space:]]*$' "$manifest" | grep -v '^[[:space:]]*#' | sed 's/[[:space:]]//g' | LC_ALL=C sort -u > "$TMPDIR/install_manifest_$arch"
-  if [[ -s "$TMPDIR/install_manifest_$arch" ]]; then
-    if grep -vE '^[A-Za-z0-9@._+-]+$' "$TMPDIR/install_manifest_$arch" | grep -q .; then bad "invalid package name syntax in installer manifest $arch"; fi
-    if [[ "$(uniq -d "$TMPDIR/install_manifest_$arch" | wc -l)" -gt 0 ]]; then bad "duplicate in installer manifest $arch"; fi
-    if ! LC_ALL=C sort -c "$TMPDIR/install_manifest_$arch" 2>/dev/null; then bad "installer manifest $arch not sorted"; fi
-  fi
-  if ! comm -3 "$TMPDIR/install_pkgs_$arch" "$TMPDIR/install_manifest_$arch" | grep -q .; then
-    ok "installer manifest $arch matches Installer-owned packages"
-  else
-    bad "installer manifest $arch differs from Installer ownership"
-    comm -3 "$TMPDIR/install_pkgs_$arch" "$TMPDIR/install_manifest_$arch" >&2
-  fi
-done
-
-# No duplicate packages across component manifests, per architecture.
+# ---------------------------------------------------------------------------
+# Package manifests
+# ---------------------------------------------------------------------------
 manifest_dupes=0
 for arch in x86_64 aarch64; do
-  find components -path "*/packages/packages.$arch" -print0 2>/dev/null \
-    | xargs -0 -r cat 2>/dev/null \
-    | grep -v '^[[:space:]]*$' \
-    | grep -v '^[[:space:]]*#' \
-    | sed 's/[[:space:]]//g' \
-    | LC_ALL=C sort > "$TMPDIR/all_manifest_pkgs_$arch"
-  if [[ -s "$TMPDIR/all_manifest_pkgs_$arch" ]] && [[ "$(uniq -d "$TMPDIR/all_manifest_pkgs_$arch" | wc -l)" -gt 0 ]]; then
+  : > "$TMPDIR/all_$arch"
+  for c in echo-core echo-boot echo-desktop echo-install; do
+    m="components/$c/packages/packages.$arch"
+    [[ -f "$m" ]] || { bad "missing manifest $m"; continue; }
+    grep -vE '^[[:space:]]*(#|$)' "$m" | sed 's/[[:space:]]//g' > "$TMPDIR/$c.$arch"
+    if grep -vE '^[A-Za-z0-9@._+-]+$' "$TMPDIR/$c.$arch" | grep -q .; then
+      bad "invalid package name in $m"
+    fi
+    if [[ -s "$TMPDIR/$c.$arch" ]] && ! LC_ALL=C sort -c "$TMPDIR/$c.$arch" 2>/dev/null; then
+      bad "manifest not sorted: $m"
+    fi
+    if [[ -s "$TMPDIR/$c.$arch" ]] && [[ "$(uniq -d "$TMPDIR/$c.$arch" | wc -l)" -gt 0 ]]; then
+      bad "duplicate package inside $m"
+    fi
+    cat "$TMPDIR/$c.$arch" >> "$TMPDIR/all_$arch"
+  done
+  LC_ALL=C sort "$TMPDIR/all_$arch" -o "$TMPDIR/all_$arch"
+  if [[ -s "$TMPDIR/all_$arch" ]] && [[ "$(uniq -d "$TMPDIR/all_$arch" | wc -l)" -gt 0 ]]; then
     bad "duplicate packages across component manifests for $arch"
-    uniq -d "$TMPDIR/all_manifest_pkgs_$arch" >&2
-    manifest_dupes=$((manifest_dupes + 1)) || true
+    uniq -d "$TMPDIR/all_$arch" >&2
+    manifest_dupes=$((manifest_dupes + 1))
   fi
 done
-if [[ "$manifest_dupes" -eq 0 ]]; then ok "no duplicate packages across manifests per architecture"; fi
+[[ "$manifest_dupes" -eq 0 ]] && ok "no duplicate packages across component manifests"
 
-# Ownership maps complete
-awk -F '\t' 'NR>1 {print $1}' "$file_map" | sort | uniq -d | grep -q . && bad "duplicate file ownership rows"
-awk -F '\t' 'NR>1 {print $1}' "$package_map" | sort | uniq -d | grep -q . && bad "duplicate package ownership rows"
-awk -F '\t' 'NR>1 && $2 !~ /^(BOOT|INSTALLER|CORE|SHARED)$/ {print}' "$file_map" | grep -q . && bad "invalid file owner"
-awk -F '\t' 'NR>1 && $2 !~ /^(BOOT|INSTALLER|CORE|SHARED)$/ {print}' "$package_map" | grep -q . && bad "invalid package owner"
-
-# Every mapped source must exist; every profile file must be mapped exactly once.
-coverage_fail=0
-awk -F '\t' 'NR>1 {print $1}' "$file_map" | while IFS= read -r mapped; do
-  [[ -e "$mapped" || -L "$mapped" ]] || printf '%s\n' "$mapped"
-done > "$TMPDIR/missing_sources"
-if [[ -s "$TMPDIR/missing_sources" ]]; then
-  bad "ownership map references missing sources"
-  sed -n '1,10p' "$TMPDIR/missing_sources" >&2
-  coverage_fail=$((coverage_fail + 1))
-fi
-awk -F '\t' 'NR>1 && $1 ~ /^profile\// {print $1}' "$file_map" | LC_ALL=C sort > "$TMPDIR/profile_mapped"
-find profile \( -type f -o -type l \) -print | LC_ALL=C sort > "$TMPDIR/profile_actual"
-if ! cmp -s "$TMPDIR/profile_mapped" "$TMPDIR/profile_actual"; then
-  bad "profile files are not covered exactly once by the ownership map"
-  comm -3 "$TMPDIR/profile_mapped" "$TMPDIR/profile_actual" >&2
-  coverage_fail=$((coverage_fail + 1))
-fi
-
-# Every legacy package declaration per architecture must be mapped exactly once.
+# Desktop must own the KDE/SDDM stack; Core/Installer/Boot must not.
 for arch in x86_64 aarch64; do
-  if [[ "$arch" == "x86_64" ]]; then col=4; else col=5; fi
-  awk -F '\t' -v c="$col" 'NR>1 && $c=="yes" {print $1}' "$package_map" | LC_ALL=C sort > "$TMPDIR/map_pkgs_$arch"
-  grep -vE '^[[:space:]]*(#|$)' "profile/packages.$arch" | sed 's/[[:space:]]//g' | LC_ALL=C sort > "$TMPDIR/list_pkgs_$arch"
-  if ! cmp -s "$TMPDIR/map_pkgs_$arch" "$TMPDIR/list_pkgs_$arch"; then
-    bad "legacy package list $arch does not match the ownership map"
-    comm -3 "$TMPDIR/map_pkgs_$arch" "$TMPDIR/list_pkgs_$arch" >&2
-    coverage_fail=$((coverage_fail + 1))
+  for p in plasma-meta sddm; do
+    grep -Fxq "$p" "$TMPDIR/echo-desktop.$arch" || bad "echo-desktop/$arch is missing $p"
+  done
+  for c in echo-core echo-boot echo-install; do
+    for p in plasma-meta sddm lightdm lightdm-gtk-greeter; do
+      if grep -Fxq "$p" "$TMPDIR/$c.$arch" 2>/dev/null; then
+        bad "$c/$arch must not declare desktop package $p"
+      fi
+    done
+  done
+done
+
+obsolete='^(exo|garcon|lightdm|lightdm-gtk-greeter|polkit-gnome|thunar|thunar-volman|tumbler|xfce4-.*|xfdesktop|xfwm4)$'
+if grep -REh "$obsolete" components/*/packages/packages.x86_64 components/*/packages/packages.aarch64 2>/dev/null | grep -q .; then
+  bad "obsolete XFCE/LightDM package remains in a manifest"
+else
+  ok "no XFCE/LightDM packages remain in component manifests"
+fi
+
+# ---------------------------------------------------------------------------
+# Desktop configuration contract
+# ---------------------------------------------------------------------------
+d=components/echo-desktop/config
+sddm_common="$d/airootfs/etc/sddm.conf"
+sddm_live="$d/live/etc/sddm.conf.d/20-echoos-live-autologin.conf"
+theme="$d/airootfs/usr/share/sddm/themes/echoos"
+wallpaper="$d/airootfs/usr/share/wallpapers/EchoOS/contents/images/2560x1280.jpg"
+
+[[ -s "$sddm_common" ]] || bad "missing SDDM common configuration"
+grep -Eq '^DisplayServer=wayland$' "$sddm_common" 2>/dev/null || bad "SDDM is not configured for Wayland"
+grep -Eq '^Current=echoos$' "$sddm_common" 2>/dev/null || bad "SDDM Echo theme is not selected"
+[[ -s "$sddm_live" ]] || bad "missing live SDDM autologin drop-in"
+grep -Eq '^User=archiso$' "$sddm_live" 2>/dev/null || bad "live SDDM autologin user is not archiso"
+grep -Eq '^Session=plasma\.desktop$' "$sddm_live" 2>/dev/null || bad "live SDDM session is not plasma.desktop"
+[[ -s "$theme/Main.qml" ]] || bad "missing SDDM Echo greeter QML"
+[[ -s "$theme/theme.conf" ]] || bad "missing SDDM Echo theme.conf"
+[[ -s "$theme/metadata.desktop" ]] || bad "missing SDDM Echo theme metadata.desktop"
+grep -Eq '^QtVersion=6$' "$theme/metadata.desktop" 2>/dev/null \
+  || bad "SDDM Echo theme must declare QtVersion=6 (the image has no Qt5 greeter libraries)"
+grep -Eq '^MainScript=Main\.qml$' "$theme/metadata.desktop" 2>/dev/null \
+  || bad "SDDM Echo theme metadata does not point at Main.qml"
+[[ -s "$wallpaper" ]] || bad "missing Echo wallpaper"
+[[ -x "$d/airootfs/usr/local/bin/echoos-desktop-branding" ]] || bad "desktop branding helper is not executable"
+[[ -s "$d/airootfs/etc/xdg/autostart/echoos-plasma-branding.desktop" ]] || bad "missing desktop branding autostart"
+
+dm_link="$d/live/etc/systemd/system/display-manager.service"
+if [[ -L "$dm_link" ]]; then
+  [[ "$(readlink "$dm_link")" == "/usr/lib/systemd/system/sddm.service" ]] \
+    && ok "live display-manager link points at sddm" \
+    || bad "live display-manager link does not point at sddm"
+else
+  bad "missing live display-manager link"
+fi
+
+# ---------------------------------------------------------------------------
+# Installer contract
+# ---------------------------------------------------------------------------
+inst=components/echo-install/calamares
+grep -Eq '^[[:space:]]*-[[:space:]]*sddm$' "$inst/modules/displaymanager.conf" || bad "Calamares displaymanager does not select SDDM"
+if grep -Eq '^[[:space:]]*-[[:space:]]*lightdm$' "$inst/modules/displaymanager.conf"; then bad "Calamares displaymanager still selects LightDM"; fi
+grep -Eq 'name: "sddm\.service"' "$inst/modules/services-systemd.conf" || bad "Calamares does not enable sddm.service"
+if grep -Eq 'name: "lightdm\.service"' "$inst/modules/services-systemd.conf"; then bad "Calamares still enables lightdm.service"; fi
+grep -Fq '/etc/sddm.conf.d/20-echoos-live-autologin.conf' "$inst/modules/unpackfs/exclude-list.txt" \
+  || bad "live SDDM autologin is not excluded from the target"
+grep -Fq '/etc/systemd/system/display-manager.service' "$inst/modules/unpackfs/exclude-list.txt" \
+  || bad "live display-manager link is not excluded from the target"
+grep -Eq '^branding:[[:space:]]*echoos$' "$inst/settings.conf" || bad "Calamares branding is not echoos"
+grep -q 'id: refindboot' "$inst/settings.conf" || bad "Calamares refindboot instance is missing"
+[[ -s components/echo-install/config/rootfs/usr/local/bin/echoos-install-launcher ]] || bad "installer launcher missing"
+[[ -s components/echo-install/config/home/archiso/Desktop/echoos-install.desktop ]] || bad "installer desktop shortcut missing"
+[[ -s components/echo-install/config/live/xdg/autostart/echoos-install.desktop ]] || bad "installer autostart missing"
+
+# ---------------------------------------------------------------------------
+# Assemble both architectures in isolation.
+# ---------------------------------------------------------------------------
+for arch in x86_64 aarch64; do
+  out="$TMPDIR/profile-$arch"
+  if ./build/assemble.sh --arch "$arch" --out "$out" >"$TMPDIR/assemble-$arch.log" 2>&1; then
+    ok "assembly succeeds for $arch"
+  else
+    bad "assembly failed for $arch"
+    sed -n '1,20p' "$TMPDIR/assemble-$arch.log" >&2
+    continue
+  fi
+  [[ -s "$out/packages.$arch" ]] || bad "assembled $arch package list is empty"
+  LC_ALL=C sort "$TMPDIR/all_$arch" > "$TMPDIR/expected-$arch"
+  if cmp -s "$TMPDIR/expected-$arch" "$out/packages.$arch"; then
+    ok "assembled $arch package list matches component manifests"
+  else
+    bad "assembled $arch package list differs from component manifests"
+  fi
+  if [[ "$arch" == "x86_64" ]]; then
+    for f in profiledef.sh bootstrap_packages pacman.conf pacman.conf.in packages.x86_64 \
+             airootfs/etc/sddm.conf \
+             airootfs/etc/sddm.conf.d/20-echoos-live-autologin.conf \
+             airootfs/etc/systemd/system/display-manager.service \
+             airootfs/etc/calamares/modules/displaymanager.conf \
+             airootfs/usr/share/sddm/themes/echoos/Main.qml \
+             airootfs/usr/share/wallpapers/EchoOS/contents/images/2560x1280.jpg; do
+      [[ -e "$out/$f" || -L "$out/$f" ]] || bad "assembled profile is missing $f"
+    done
+    if grep -RIlq 'lightdm' "$out/airootfs/etc" 2>/dev/null; then
+      bad "assembled profile still contains LightDM configuration"
+    fi
   fi
 done
-[[ "$coverage_fail" -eq 0 ]] && ok "ownership maps cover all profile files and package declarations"
-ok "ownership maps consistent"
 
-# Overlays/destinations unique
-awk -F '\t' 'NR>1 && $5 != "-" {print $5}' "$file_map" | LC_ALL=C sort | uniq -d | grep -q . && bad "duplicate destinations" || ok "no duplicate destinations"
-awk -F '\t' 'NR>1 && $4 != "-" {print $4}' "$file_map" | LC_ALL=C sort | uniq -d | grep -q . && bad "duplicate future paths" || ok "no duplicate future paths"
-
-# Baseline check: profile unchanged
-find profile \( -type f -o -type l \) -print | LC_ALL=C sort > "$TMPDIR/profile_now"
-awk -F '\t' 'NR>1 {print $1}' "$baseline" | LC_ALL=C sort > "$TMPDIR/profile_base"
-if ! cmp -s "$TMPDIR/profile_now" "$TMPDIR/profile_base"; then bad "profile file set changed vs baseline"; else ok "profile file set unchanged vs baseline"; fi
-if uniq -d "$TMPDIR/profile_base" | grep -q .; then bad "duplicate paths in profile baseline"; else ok "profile baseline paths unique"; fi
-
-baseline_fail=0
-while IFS=$'\t' read -r bpath btype bmode bsize bsha blink; do
-  [[ "$bpath" == "path" ]] && continue
-  if [[ ! -e "$bpath" && ! -L "$bpath" ]]; then bad "baseline path missing: $bpath"; baseline_fail=$((baseline_fail+1)) || true; continue; fi
-  if [[ -L "$bpath" ]]; then ntype=symlink; elif [[ -f "$bpath" ]]; then ntype=file; else ntype=other; fi
-  [[ "$ntype" == "$btype" ]] || { bad "type changed $bpath"; baseline_fail=$((baseline_fail+1)) || true; }
-  nmode=$(stat -c '%a' "$bpath"); [[ "$nmode" == "$bmode" ]] || { bad "mode changed $bpath"; baseline_fail=$((baseline_fail+1)) || true; }
-  nsize=$(stat -c '%s' "$bpath"); [[ "$nsize" == "$bsize" ]] || { bad "size changed $bpath"; baseline_fail=$((baseline_fail+1)) || true; }
-  if [[ "$btype" == "symlink" ]]; then
-    nlink=$(readlink "$bpath"); [[ "$nlink" == "$blink" ]] || { bad "symlink target changed $bpath"; baseline_fail=$((baseline_fail+1)) || true; }
+# The assembled tree must carry every legacy source path except the two
+# LightDM files that Echo Desktop deliberately replaces, plus the desktop
+# payload itself.
+if [[ -d "$TMPDIR/profile-x86_64" ]]; then
+  python3 - "$TMPDIR/profile-x86_64" > "$TMPDIR/path-diff" <<'PY'
+import os, sys
+out = sys.argv[1]
+def files(root):
+    return {os.path.relpath(os.path.join(d, f), root) for d, _, fs in os.walk(root) for f in fs}
+legacy = files('profile')
+built = files(out)
+removed = {
+    'airootfs/etc/lightdm/lightdm.conf',
+    'airootfs/etc/lightdm/lightdm.conf.d/20-autologin.conf',
+}
+expected_extra = {
+    'airootfs/etc/sddm.conf',
+    'airootfs/etc/sddm.conf.d/20-echoos-live-autologin.conf',
+    'airootfs/etc/xdg/autostart/echoos-plasma-branding.desktop',
+    'airootfs/usr/local/bin/echoos-desktop-branding',
+    'airootfs/usr/share/sddm/themes/echoos/Main.qml',
+    'airootfs/usr/share/sddm/themes/echoos/background.jpg',
+    'airootfs/usr/share/sddm/themes/echoos/logo.jpeg',
+    'airootfs/usr/share/sddm/themes/echoos/metadata.desktop',
+    'airootfs/usr/share/sddm/themes/echoos/theme.conf',
+    'airootfs/usr/share/wallpapers/EchoOS/contents/images/2560x1280.jpg',
+    'airootfs/usr/share/wallpapers/EchoOS/metadata.json',
+    'airootfs/usr/share/libalpm/hooks/echoos-refind-sync.hook',
+}
+missing = sorted((legacy - removed) - built)
+extra = sorted(built - legacy)
+if missing:
+    print('MISSING ' + ','.join(missing))
+if extra != sorted(expected_extra):
+    print('EXTRA ' + ','.join(extra))
+PY
+  if [[ -s "$TMPDIR/path-diff" ]]; then
+    bad "assembled profile does not match the legacy tree plus the desktop payload"
+    sed -n '1,20p' "$TMPDIR/path-diff" >&2
+  else
+    ok "assembled profile covers every legacy path and adds only Echo Desktop"
   fi
-  if [[ "$bsha" != "-" && "$btype" == "file" ]]; then
-    nsha=$(sha256sum "$bpath" | awk '{print $1}')
-    [[ "$nsha" == "$bsha" ]] || { bad "content changed $bpath"; baseline_fail=$((baseline_fail+1)) || true; }
-  fi
-done < "$baseline"
-if [[ $baseline_fail -eq 0 ]]; then ok "profile content/metadata unchanged vs baseline (sensitive files metadata-only)"; fi
+fi
 
-# Ensure sensitive paths are metadata-only in the baseline
-if awk -F '\t' 'NR>1 && ($1=="profile/airootfs/etc/shadow" || $1=="profile/airootfs/etc/gshadow" || $1=="profile/airootfs/root/customize_airootfs.sh") && $5!="-" {print}' "$baseline" | grep -q .; then bad "sensitive file has hash in baseline"; else ok "sensitive files not hashed in baseline"; fi
+# ---------------------------------------------------------------------------
+# profiledef permissions
+# ---------------------------------------------------------------------------
+pd=build/template/profiledef.sh
+for p in /etc/sddm.conf /etc/sddm.conf.d/20-echoos-live-autologin.conf \
+         /usr/share/sddm/themes/echoos /usr/local/bin/echoos-desktop-branding \
+         /usr/local/sbin/echoos-refindconf-write /home/archiso/Desktop/echoos-install.desktop; do
+  grep -Fq "[\"$p\"]" "$pd" || bad "profiledef.sh has no permission entry for $p"
+done
+if grep -Fq '/etc/lightdm' "$pd"; then bad "profiledef.sh still has LightDM permission entries"; fi
+grep -Fq "bootmodes=('bios.syslinux'" "$pd" || bad "profiledef.sh lost bios.syslinux bootmode"
+grep -Fq "'uefi.systemd-boot'" "$pd" || bad "profiledef.sh lost uefi.systemd-boot bootmode"
+grep -Fq 'pacman_conf="pacman.conf"' "$pd" || bad "profiledef.sh lost pacman_conf"
 
-# Generated profiles are produced by assembly; do not require them to be absent
+# ---------------------------------------------------------------------------
+# packages/ host artifacts are still present
+# ---------------------------------------------------------------------------
+[[ -s packages/calamares-3.4.2-2-x86_64.pkg.tar.zst ]] || bad "Calamares package artifact missing from packages/"
 
 printf '\n'
 if [[ "$failures" -ne 0 ]]; then
-  printf 'STEP 4 VALIDATION: FAILED (%d failure(s))\n' "$failures"
+  printf 'ECHO OS VALIDATION: FAILED (%d failure(s))\n' "$failures"
   exit 1
 fi
-printf 'STEP 4 VALIDATION: PASSED\n'
-printf 'PROFILE PARITY: NOT ESTABLISHED\n'
-printf 'No ISO built, no boot/install test, no Git command used.\n'
+printf 'ECHO OS VALIDATION: PASSED\n'
+printf 'Components: Core -> Boot -> Desktop -> Installer\n'
+printf 'Desktop: KDE Plasma 6 / KWin / SDDM Wayland\n'
+printf 'No ISO built; boot/install verification is a separate step.\n'
 exit 0
-

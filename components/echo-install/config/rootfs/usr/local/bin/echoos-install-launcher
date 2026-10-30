@@ -11,6 +11,9 @@
 #   * refuses to start a second Calamares instance,
 #   * waits (bounded) for the graphical session to settle before
 #     escalating, so autostart does not race the desktop,
+#   * grants the root Calamares process access to the user's X display
+#     when the live session is Plasma Wayland with Xwayland (root cannot
+#     connect to a Wayland compositor directly),
 #   * logs what happened to /tmp/echoos-install-launcher.log so a failed
 #     autostart is debuggable from a terminal,
 #   * escalates through pkexec, i.e. the stock Calamares polkit action
@@ -34,13 +37,21 @@ fi
 # XDG autostart only runs inside an active session, but the desktop
 # (panel, polkit agent) may still be coming up.  The polkit rule grants
 # passwordless approval without an agent, so a bounded settle delay is
-# all that is needed; if DISPLAY is somehow missing we bail out with a
-# log entry instead of wedging the session.
-if [ -z "${DISPLAY:-}" ]; then
-    log "DISPLAY is not set; not starting (session not ready?)"
+# all that is needed; if neither an X display nor a Wayland display is
+# present we bail out with a log entry instead of wedging the session.
+if [ -z "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ]; then
+    log "no graphical display in the session; not starting"
     exit 1
 fi
 sleep "$SESSION_SETTLE_SECS"
+
+# Calamares runs as root through pkexec.  On Plasma Wayland that means it
+# cannot talk to the user's Wayland compositor, so it falls back to Qt's
+# XCB platform through Xwayland.  Grant root access to the X display; the
+# operation is best-effort because a pure Wayland session has no Xwayland.
+if [ -n "${DISPLAY:-}" ] && command -v xhost >/dev/null 2>&1; then
+    xhost +SI:localuser:root >/dev/null 2>&1 || true
+fi
 
 if ! command -v calamares >/dev/null 2>&1; then
     log "calamares binary not found in PATH; image is broken"

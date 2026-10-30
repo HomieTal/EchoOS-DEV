@@ -1,0 +1,116 @@
+#!/bin/bash
+# Finalises the rEFInd boot setup of the freshly installed Echo OS system.
+#
+# Why this script exists:
+#
+# 1. `refind-install` (run by shellprocess-refindboot.conf) installs the
+#    rEFInd loader to the ESP (mounted at /boot/efi by the installer's
+#    partition layer) and, inside a chroot, may not leave a usable NVRAM
+#    entry behind.  Most firmware falls back to the removable-media path
+#    \EFI\BOOT\BOOTX64.EFI; without it the installed system cannot boot
+#    at all (VMware reports "No compatible bootloader found").  So this
+#    script publishes the same rEFInd loader as that fallback entry.
+#
+# 2. `refind-install` seeds /boot/refind_linux.conf from /proc/cmdline,
+#    but the job runs chrooted into the target, where /proc/cmdline is
+#    still the *live ISO's* archiso command line (root=/dev/loop0 and
+#    friends) and cannot boot the installed system.  So this script
+#    writes explicit parameters, derived from the target's own
+#    /etc/fstab, right next to the installed kernel.
+#
+# Runs inside the target chroot (see shellprocess-refindboot.conf); the
+# target root prefix can be overridden with $ECHOO_PREFIX for testing.
+#
+# SPDX-License-Identifier: CC0-1.0
+
+set -e
+
+prefix="${ECHOO_PREFIX:-}"
+fstab="${prefix}/etc/fstab"
+
+if [ ! -f "$fstab" ]; then
+    echo "ERROR: $fstab does not exist" >&2
+    exit 1
+fi
+
+# --- locate the ESP mountpoint from the target fstab (vfat entry) -------
+esp=""
+while read -r src mountpoint fstype options _; do
+    if [ "$fstype" = "vfat" ] && [ -n "$mountpoint" ]; then
+        esp="${prefix}${mountpoint}"
+        break
+    fi
+done < "$fstab"
+if [ -z "$esp" ] || [ ! -d "$esp" ]; then
+    echo "ERROR: no mounted ESP found in $fstab; cannot publish the fallback loader" >&2
+    exit 1
+fi
+
+# --- locate the rEFInd loader that refind-install placed on the ESP -----
+refind_src="$esp/EFI/refind/refind_x64.efi"
+if [ ! -f "$refind_src" ]; then
+    refind_src="/usr/share/refind/refind_x64.efi"
+fi
+if [ ! -f "$refind_src" ]; then
+    echo "ERROR: rEFInd loader not found in $esp/EFI/refind or /usr/share/refind" >&2
+    exit 1
+fi
+
+# --- publish it as the removable-media fallback \EFI\BOOT\BOOTX64.EFI ---
+mkdir -p "$esp/EFI/BOOT"
+install -m 0644 "$refind_src" "$esp/EFI/BOOT/BOOTX64.EFI"
+if [ -f "$esp/EFI/refind/BOOT.CSV" ]; then
+    install -m 0644 "$esp/EFI/refind/BOOT.CSV" "$esp/EFI/BOOT/BOOT.CSV"
+fi
+echo "echoos-refindconf-write: published $refind_src as $esp/EFI/BOOT/BOOTX64.EFI"
+
+# --- locate the installed kernel and its directory -----------------------
+kernel=""
+for cand in "$prefix/boot/vmlinuz-linux" "$esp/vmlinuz-linux"; do
+    if [ -f "$cand" ]; then
+        kernel="$cand"
+        break
+    fi
+done
+if [ -z "$kernel" ]; then
+    kernel="$(find "$prefix/boot" "$esp" -maxdepth 4 -name 'vmlinuz-linux' 2>/dev/null | head -n 1)"
+fi
+if [ -z "$kernel" ]; then
+    echo "ERROR: no vmlinuz-linux under $prefix/boot or $esp; cannot write refind_linux.conf" >&2
+    exit 1
+fi
+kdir="$(dirname "$kernel")"
+
+rootsrc=""; rootfstype=""; rootoptions=""
+while read -r src mountpoint fstype options _; do
+    if [ "$mountpoint" = "/" ]; then
+        rootsrc="$src"
+        rootfstype="$fstype"
+        rootoptions="$options"
+        break
+    fi
+done < "$fstab"
+
+if [ -z "$rootsrc" ]; then
+    echo "ERROR: no / entry found in $fstab; cannot write refind_linux.conf" >&2
+    exit 1
+fi
+
+rootcmd="root=$rootsrc"
+if [ "$rootfstype" = "btrfs" ]; then
+    subvol="$(echo "$rootoptions" | tr ',' '\n' | sed -n 's/^subvol=/subvol=/p' | head -n 1)"
+    if [ -z "$subvol" ]; then
+        echo "WARNING: btrfs / entry without subvol= in $fstab; rEFInd default subvolume will be used" >&2
+    else
+        rootcmd="root=$rootsrc rootflags=$subvol"
+    fi
+fi
+
+cat > "$kdir/refind_linux.conf" <<EOF
+"Boot with standard options"  "ro $rootcmd quiet splash"
+"Boot to single-user mode"    "ro $rootcmd single"
+"Boot with minimal options"   "ro $rootcmd"
+EOF
+
+chmod 644 "$kdir/refind_linux.conf"
+echo "echoos-refindconf-write: wrote $kdir/refind_linux.conf with: rootcmd [$rootcmd]"
