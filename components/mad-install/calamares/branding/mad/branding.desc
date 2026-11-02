@@ -1,0 +1,97 @@
+# SPDX-FileCopyrightText: no
+# SPDX-License-Identifier: CC0-1.0
+#
+# MAD Installer — product branding for the Echo OS installer frontend.
+#
+# Brand relationship:
+#   MAD Installer — Powered by Echo OS
+#
+# The installer presents itself as "MAD Installer"; the operating system
+# it installs is "Echo OS".  All artwork in this directory is derived from
+# the official Echo OS mark (echo-mark.svg, project-original artwork):
+#
+#   echo-mark.svg        master logo, verbatim copy — black paths #0b0b0b,
+#                        teal pixels #019099
+#   echo-mark-light.svg  contrast variant for dark surfaces: ONLY the
+#                        #0b0b0b paths are re-colored to #ffffff; the teal
+#                        pixels are untouched. Geometry is identical.
+#
+# Product strings intentionally follow /usr/share/echoos/os-release
+# (PRETTY_NAME="Echo OS 2.0 (Fox)", VERSION_ID="2.0") instead of a
+# hardcoded ISO date, so they cannot drift across releases.
+#
+# Style tokens (see docs/DESIGN-TOKENS.md):
+#   charcoal        #16181c   window/sidebar background
+#   surface         #23272e   cards, input fields
+#   text            #e8eaed   primary text
+#   echo-teal       #019099   accent (from the master SVG)
+---
+componentName: mad
+
+### WELCOME / OVERALL WORDING
+
+welcomeStyleCalamares:   false
+welcomeExpandingLogo:    true
+
+### WINDOW CONFIGURATION
+
+windowExpanding:    normal
+# Compact floating panel (matches the approved reference proportions:
+# clearly smaller than the desktop, visible margins all around).
+windowSize:         900px,560px
+windowPlacement:    center
+
+### PANELS CONFIGURATION
+
+# Top stage indicator: the white redesign (Fortect-style floating card)
+# removes the left step panel (`none` would leave no top structure) and
+# instead shows the static three-stage indicator strip at the TOP of the
+# window via a QML sidebar panel (`calamares-sidebar.qml`).
+# ENGINE LIMITATION (verified): branding QML panels receive only a "debug"
+# context property in Calamares 3.4.2 — the indicator is static and cannot
+# highlight the live stage; see docs/DESIGN-PROTOTYPE.md.
+sidebar:            qml,top
+navigation:         widget
+
+### STRINGS, IMAGES AND COLORS
+
+strings:
+    productName:         "Echo OS"
+    shortProductName:    "Echo OS"
+    version:             "2.0"
+    shortVersion:        "2.0"
+    versionedName:       "Echo OS 2.0 (Fox)"
+    shortVersionedName:  "Echo OS 2.0"
+    bootloaderEntryName: "EchoOS"
+    supportUrl:          ""
+    knownIssuesUrl:      ""
+    releaseNotesUrl:     ""
+    donateUrl:           ""
+
+images:
+    # Window icon (top-left of the title bar): the MAD "M" mark.
+    productIcon:         "productIcon.png"
+    # Sidebar logo on the white panel: master colors (black paths + teal
+    # pixels read perfectly on light surfaces).
+    productLogo:         "productLogo.png"
+    # Welcome page hero on the light background: master colors.
+    productWelcome:      "productWelcome-light-bg.png"
+
+style:
+   SidebarBackground:        "#FFFFFF"
+   SidebarText:              "#737987"
+   SidebarTextCurrent:       "#FFFFFF"
+   SidebarBackgroundCurrent: "#6952E8"
+
+### SLIDESHOW
+
+slideshow:               "slideshow.qml"
+slideshowAPI:            2
+
+### LOG UPLOADING
+#
+# Disabled. The previous Echo Install branding uploaded install logs to a
+# public fiche pastebin (termbin.com). A system installer must not publish
+# logs to an external service without the user asking for it.
+uploadServer:
+    type:    "none"

@@ -2,7 +2,7 @@
 # Echo OS validation.
 #
 # Checks the four-component model, package ownership, the assembled profile,
-# the KDE Plasma/SDDM desktop contract, and the live/target boundary.
+# the XFCE/LightDM desktop contract, and the live/target boundary.
 # Read-only with respect to profile/, components/, and build/generated/:
 # assembly is performed in a temporary directory.
 set -eu
@@ -35,9 +35,9 @@ required_dirs=(
   components/echo-desktop/packages
   components/echo-desktop/config/airootfs
   components/echo-desktop/config/live
-  components/echo-install/packages
-  components/echo-install/calamares
-  components/echo-install/config
+  components/mad-install/packages
+  components/mad-install/calamares
+  components/mad-install/config
   build/config
   build/template
 )
@@ -56,9 +56,9 @@ required_files=(
   components/echo-desktop/README.md
   components/echo-desktop/packages/packages.x86_64
   components/echo-desktop/packages/packages.aarch64
-  components/echo-install/README.md
-  components/echo-install/packages/packages.x86_64
-  components/echo-install/packages/packages.aarch64
+  components/mad-install/README.md
+  components/mad-install/packages/packages.x86_64
+  components/mad-install/packages/packages.aarch64
   build/assemble.sh
   build/validate.sh
   build/config/components.tsv
@@ -98,12 +98,12 @@ while IFS=$'\t' read -r order component root requires; do
   done
 done < "$components_map"
 
-for c in echo-core echo-boot echo-desktop echo-install; do
+for c in echo-core echo-boot echo-desktop mad-install; do
   [[ -n "${order_of[$c]:-}" ]] || bad "component missing from components.tsv: $c"
 done
 [[ "${order_of[echo-core]:-0}" -lt "${order_of[echo-desktop]:-0}" ]] || bad "echo-desktop must come after echo-core"
-[[ "${order_of[echo-boot]:-0}" -lt "${order_of[echo-install]:-0}" ]] || bad "echo-install must come after echo-boot"
-[[ "${order_of[echo-desktop]:-0}" -lt "${order_of[echo-install]:-0}" ]] || bad "echo-install must come after echo-desktop"
+[[ "${order_of[echo-boot]:-0}" -lt "${order_of[mad-install]:-0}" ]] || bad "mad-install must come after echo-boot"
+[[ "${order_of[echo-desktop]:-0}" -lt "${order_of[mad-install]:-0}" ]] || bad "mad-install must come after echo-desktop"
 
 while IFS=$'\t' read -r order component root requires; do
   [[ "$order" == "order" ]] && continue
@@ -134,7 +134,7 @@ done < "$overlays_map"
 manifest_dupes=0
 for arch in x86_64 aarch64; do
   : > "$TMPDIR/all_$arch"
-  for c in echo-core echo-boot echo-desktop echo-install; do
+  for c in echo-core echo-boot echo-desktop mad-install; do
     m="components/$c/packages/packages.$arch"
     [[ -f "$m" ]] || { bad "missing manifest $m"; continue; }
     grep -vE '^[[:space:]]*(#|$)' "$m" | sed 's/[[:space:]]//g' > "$TMPDIR/$c.$arch"
@@ -158,13 +158,13 @@ for arch in x86_64 aarch64; do
 done
 [[ "$manifest_dupes" -eq 0 ]] && ok "no duplicate packages across component manifests"
 
-# Desktop must own the KDE/SDDM stack; Core/Installer/Boot must not.
+# Desktop must own the XFCE/LightDM stack; Core/Installer/Boot must not.
 for arch in x86_64 aarch64; do
-  for p in plasma-meta sddm; do
+  for p in xfce4 lightdm lightdm-gtk-greeter; do
     grep -Fxq "$p" "$TMPDIR/echo-desktop.$arch" || bad "echo-desktop/$arch is missing $p"
   done
-  for c in echo-core echo-boot echo-install; do
-    for p in plasma-meta sddm lightdm lightdm-gtk-greeter; do
+  for c in echo-core echo-boot mad-install; do
+    for p in plasma-meta sddm xfce4 lightdm lightdm-gtk-greeter; do
       if grep -Fxq "$p" "$TMPDIR/$c.$arch" 2>/dev/null; then
         bad "$c/$arch must not declare desktop package $p"
       fi
@@ -172,44 +172,44 @@ for arch in x86_64 aarch64; do
   done
 done
 
-obsolete='^(exo|garcon|lightdm|lightdm-gtk-greeter|polkit-gnome|thunar|thunar-volman|tumbler|xfce4-.*|xfdesktop|xfwm4)$'
+obsolete='^(plasma-meta|sddm|sddm-kcm|kwin|konsole|dolphin|qt6-wayland)$'
 if grep -REh "$obsolete" components/*/packages/packages.x86_64 components/*/packages/packages.aarch64 2>/dev/null | grep -q .; then
-  bad "obsolete XFCE/LightDM package remains in a manifest"
+  bad "obsolete KDE/SDDM package remains in a manifest"
 else
-  ok "no XFCE/LightDM packages remain in component manifests"
+  ok "no KDE/SDDM packages remain in component manifests"
 fi
 
 # ---------------------------------------------------------------------------
 # Desktop configuration contract
 # ---------------------------------------------------------------------------
 d=components/echo-desktop/config
-sddm_common="$d/airootfs/etc/sddm.conf"
-sddm_live="$d/live/etc/sddm.conf.d/20-echoos-live-autologin.conf"
-theme="$d/airootfs/usr/share/sddm/themes/echoos"
-wallpaper="$d/airootfs/usr/share/wallpapers/EchoOS/contents/images/2560x1280.jpg"
+lightdm_common="$d/airootfs/etc/lightdm/lightdm.conf"
+greeter="$d/airootfs/etc/lightdm/lightdm-gtk-greeter.conf"
+lightdm_live="$d/live/etc/lightdm/lightdm.conf.d/20-autologin.conf"
+xfce_desktop="$d/airootfs/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
+wallpaper="$d/airootfs/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png"
+mark="$d/airootfs/usr/share/echoos/echo-mark.png"
 
-[[ -s "$sddm_common" ]] || bad "missing SDDM common configuration"
-grep -Eq '^DisplayServer=wayland$' "$sddm_common" 2>/dev/null || bad "SDDM is not configured for Wayland"
-grep -Eq '^Current=echoos$' "$sddm_common" 2>/dev/null || bad "SDDM Echo theme is not selected"
-[[ -s "$sddm_live" ]] || bad "missing live SDDM autologin drop-in"
-grep -Eq '^User=archiso$' "$sddm_live" 2>/dev/null || bad "live SDDM autologin user is not archiso"
-grep -Eq '^Session=plasma\.desktop$' "$sddm_live" 2>/dev/null || bad "live SDDM session is not plasma.desktop"
-[[ -s "$theme/Main.qml" ]] || bad "missing SDDM Echo greeter QML"
-[[ -s "$theme/theme.conf" ]] || bad "missing SDDM Echo theme.conf"
-[[ -s "$theme/metadata.desktop" ]] || bad "missing SDDM Echo theme metadata.desktop"
-grep -Eq '^QtVersion=6$' "$theme/metadata.desktop" 2>/dev/null \
-  || bad "SDDM Echo theme must declare QtVersion=6 (the image has no Qt5 greeter libraries)"
-grep -Eq '^MainScript=Main\.qml$' "$theme/metadata.desktop" 2>/dev/null \
-  || bad "SDDM Echo theme metadata does not point at Main.qml"
+[[ -s "$lightdm_common" ]] || bad "missing LightDM common configuration"
+grep -Eq '^greeter-session=lightdm-gtk-greeter$' "$lightdm_common" 2>/dev/null || bad "LightDM greeter-session is not lightdm-gtk-greeter"
+grep -Eq '^user-session=xfce$' "$lightdm_common" 2>/dev/null || bad "LightDM user-session is not xfce"
+[[ -s "$greeter" ]] || bad "missing LightDM greeter branding configuration"
+grep -Eq '^background=/usr/share/wallpapers/EchoOS/' "$greeter" 2>/dev/null || bad "greeter background is not the Echo wallpaper"
+grep -Eq '^logo=/usr/share/echoos/echo-mark\.png$' "$greeter" 2>/dev/null || bad "greeter logo is not the Echo mark"
+[[ -s "$lightdm_live" ]] || bad "missing live LightDM autologin drop-in"
+grep -Eq '^autologin-user=archiso$' "$lightdm_live" 2>/dev/null || bad "live LightDM autologin user is not archiso"
+grep -Eq '^autologin-session=xfce$' "$lightdm_live" 2>/dev/null || bad "live LightDM session is not xfce"
+[[ -s "$xfce_desktop" ]] || bad "missing XFCE default wallpaper configuration"
+grep -Fq '/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png' "$xfce_desktop" 2>/dev/null \
+  || bad "XFCE default wallpaper is not the Echo wallpaper"
 [[ -s "$wallpaper" ]] || bad "missing Echo wallpaper"
-[[ -x "$d/airootfs/usr/local/bin/echoos-desktop-branding" ]] || bad "desktop branding helper is not executable"
-[[ -s "$d/airootfs/etc/xdg/autostart/echoos-plasma-branding.desktop" ]] || bad "missing desktop branding autostart"
+[[ -s "$mark" ]] || bad "missing Echo mark for the greeter"
 
 dm_link="$d/live/etc/systemd/system/display-manager.service"
 if [[ -L "$dm_link" ]]; then
-  [[ "$(readlink "$dm_link")" == "/usr/lib/systemd/system/sddm.service" ]] \
-    && ok "live display-manager link points at sddm" \
-    || bad "live display-manager link does not point at sddm"
+  [[ "$(readlink "$dm_link")" == "/usr/lib/systemd/system/lightdm.service" ]] \
+    && ok "live display-manager link points at lightdm" \
+    || bad "live display-manager link does not point at lightdm"
 else
   bad "missing live display-manager link"
 fi
@@ -217,24 +217,24 @@ fi
 # ---------------------------------------------------------------------------
 # Installer contract
 # ---------------------------------------------------------------------------
-inst=components/echo-install/calamares
-grep -Eq '^[[:space:]]*-[[:space:]]*sddm$' "$inst/modules/displaymanager.conf" || bad "Calamares displaymanager does not select SDDM"
-if grep -Eq '^[[:space:]]*-[[:space:]]*lightdm$' "$inst/modules/displaymanager.conf"; then bad "Calamares displaymanager still selects LightDM"; fi
-grep -Eq 'name: "sddm\.service"' "$inst/modules/services-systemd.conf" || bad "Calamares does not enable sddm.service"
-if grep -Eq 'name: "lightdm\.service"' "$inst/modules/services-systemd.conf"; then bad "Calamares still enables lightdm.service"; fi
-# The live SDDM autologin is excluded from the target either as the exact
-# drop-in file or as the whole /etc/sddm.conf.d/ directory (the current
-# exclude list removes the directory, which covers the file).
-grep -Fq '/etc/sddm.conf.d/20-echoos-live-autologin.conf' "$inst/modules/unpackfs/exclude-list.txt" \
-  || grep -Fq '/etc/sddm.conf.d/' "$inst/modules/unpackfs/exclude-list.txt" \
-  || bad "live SDDM autologin is not excluded from the target"
+inst=components/mad-install/calamares
+grep -Eq '^[[:space:]]*-[[:space:]]*lightdm$' "$inst/modules/displaymanager.conf" || bad "Calamares displaymanager does not select LightDM"
+if grep -Eq '^[[:space:]]*-[[:space:]]*sddm$' "$inst/modules/displaymanager.conf"; then bad "Calamares displaymanager still selects SDDM"; fi
+grep -Eq 'name: "lightdm\.service"' "$inst/modules/services-systemd.conf" || bad "Calamares does not enable lightdm.service"
+if grep -Eq 'name: "sddm\.service"' "$inst/modules/services-systemd.conf"; then bad "Calamares still enables sddm.service"; fi
+# The live LightDM autologin is excluded from the target either as the exact
+# drop-in file or as the whole /etc/lightdm/lightdm.conf.d/ directory (the
+# current exclude list removes the directory, which covers the file).
+grep -Fq '/etc/lightdm/lightdm.conf.d/20-autologin.conf' "$inst/modules/unpackfs/exclude-list.txt" \
+  || grep -Fq '/etc/lightdm/lightdm.conf.d/' "$inst/modules/unpackfs/exclude-list.txt" \
+  || bad "live LightDM autologin is not excluded from the target"
 grep -Fq '/etc/systemd/system/display-manager.service' "$inst/modules/unpackfs/exclude-list.txt" \
   || bad "live display-manager link is not excluded from the target"
-grep -Eq '^branding:[[:space:]]*echoos$' "$inst/settings.conf" || bad "Calamares branding is not echoos"
+grep -Eq '^branding:[[:space:]]*mad$' "$inst/settings.conf" || bad "Calamares branding is not mad"
 grep -q 'id: refindboot' "$inst/settings.conf" || bad "Calamares refindboot instance is missing"
-[[ -s components/echo-install/config/rootfs/usr/local/bin/echoos-install-launcher ]] || bad "installer launcher missing"
-[[ -s components/echo-install/config/home/archiso/Desktop/echoos-install.desktop ]] || bad "installer desktop shortcut missing"
-[[ -s components/echo-install/config/live/xdg/autostart/echoos-install.desktop ]] || bad "installer autostart missing"
+[[ -s components/mad-install/config/rootfs/usr/local/bin/mad-installer-launcher ]] || bad "installer launcher missing"
+[[ -s components/mad-install/config/home/archiso/Desktop/mad-installer.desktop ]] || bad "installer desktop shortcut missing"
+[[ -s components/mad-install/config/live/xdg/autostart/mad-installer.desktop ]] || bad "installer autostart missing"
 
 # ---------------------------------------------------------------------------
 # Assemble both architectures in isolation.
@@ -257,16 +257,17 @@ for arch in x86_64 aarch64; do
   fi
   if [[ "$arch" == "x86_64" ]]; then
     for f in profiledef.sh bootstrap_packages pacman.conf pacman.conf.in packages.x86_64 \
-             airootfs/etc/sddm.conf \
-             airootfs/etc/sddm.conf.d/20-echoos-live-autologin.conf \
+             airootfs/etc/lightdm/lightdm.conf \
+             airootfs/etc/lightdm/lightdm-gtk-greeter.conf \
+             airootfs/etc/lightdm/lightdm.conf.d/20-autologin.conf \
              airootfs/etc/systemd/system/display-manager.service \
              airootfs/etc/calamares/modules/displaymanager.conf \
-             airootfs/usr/share/sddm/themes/echoos/Main.qml \
-             airootfs/usr/share/wallpapers/EchoOS/contents/images/2560x1280.jpg; do
+             airootfs/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml \
+             airootfs/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png; do
       [[ -e "$out/$f" || -L "$out/$f" ]] || bad "assembled profile is missing $f"
     done
-    if grep -RIlq 'lightdm' "$out/airootfs/etc" 2>/dev/null; then
-      bad "assembled profile still contains LightDM configuration"
+    if grep -RIlq 'sddm' "$out/airootfs/etc" 2>/dev/null; then
+      bad "assembled profile still contains SDDM configuration"
     fi
   fi
 done
@@ -283,27 +284,76 @@ def files(root):
 legacy = files('profile')
 built = files(out)
 removed = {
-    'airootfs/etc/lightdm/lightdm.conf',
-    'airootfs/etc/lightdm/lightdm.conf.d/20-autologin.conf',
+    # MAD Installer migration: the old Echo Install branding component and
+    # launcher file identities were replaced by MAD equivalents; the legacy
+    # profile/ snapshot still carries the old paths.
+    'airootfs/etc/polkit-1/rules.d/50-calamares.rules',
+    'airootfs/etc/calamares/branding/echoos/banner.png',
+    'airootfs/etc/calamares/branding/echoos/banner.png.license',
+    'airootfs/etc/calamares/branding/echoos/branding.desc',
+    'airootfs/etc/calamares/branding/echoos/echoos-logo.png',
+    'airootfs/etc/calamares/branding/echoos/lang/calamares-default_ar.qm',
+    'airootfs/etc/calamares/branding/echoos/lang/calamares-default_en.qm',
+    'airootfs/etc/calamares/branding/echoos/lang/calamares-default_eo.qm',
+    'airootfs/etc/calamares/branding/echoos/lang/calamares-default_fr.qm',
+    'airootfs/etc/calamares/branding/echoos/lang/calamares-default_nl.qm',
+    'airootfs/etc/calamares/branding/echoos/languages.png',
+    'airootfs/etc/calamares/branding/echoos/languages.png.license',
+    'airootfs/etc/calamares/branding/echoos/show.qml',
+    'airootfs/etc/calamares/branding/echoos/squid.png',
+    'airootfs/etc/calamares/branding/echoos/squid.png.license',
+    'airootfs/etc/calamares/branding/echoos/stylesheet.qss',
+    'airootfs/etc/xdg/autostart/echoos-install.desktop',
+    'airootfs/home/archiso/Desktop/echoos-install.desktop',
+    'airootfs/usr/local/bin/echoos-install-launcher',
+    'airootfs/usr/local/sbin/echoos-refindconf-write',
+    # MAD Installer: the Arch-branded syslinux BIOS boot path was removed
+    # from the profile — the live medium boots via rEFInd (UEFI) only.
+    'syslinux/archiso_head.cfg',
+    'syslinux/archiso_pxe-linux.cfg',
+    'syslinux/archiso_pxe.cfg',
+    'syslinux/archiso_sys-linux.cfg',
+    'syslinux/archiso_sys.cfg',
+    'syslinux/archiso_tail.cfg',
+    'syslinux/splash.png',
+    'syslinux/syslinux.cfg',
 }
 expected_extra = {
-    'airootfs/etc/sddm.conf',
-    'airootfs/etc/sddm.conf.d/20-echoos-live-autologin.conf',
-    'airootfs/etc/xdg/autostart/echoos-plasma-branding.desktop',
-    'airootfs/usr/local/bin/echoos-desktop-branding',
-    'airootfs/usr/share/sddm/themes/echoos/Main.qml',
-    'airootfs/usr/share/sddm/themes/echoos/background.jpg',
-    'airootfs/usr/share/sddm/themes/echoos/logo.jpeg',
-    'airootfs/usr/share/sddm/themes/echoos/metadata.desktop',
-    'airootfs/usr/share/sddm/themes/echoos/theme.conf',
-    'airootfs/usr/share/wallpapers/EchoOS/contents/images/2560x1280.jpg',
-    'airootfs/usr/share/wallpapers/EchoOS/metadata.json',
-    # Files that moved from the legacy profile tree into components during
-    # the v3.0.0 migration (they live in echo-install and echo-boot now).
+    'airootfs/etc/calamares/branding/mad/branding.desc',
+    'airootfs/etc/calamares/branding/mad/calamares-sidebar.qml',
+    'airootfs/etc/calamares/branding/mad/echo-mark-light.svg',
+    'airootfs/etc/calamares/branding/mad/echo-mark.svg',
+    'airootfs/etc/calamares/branding/mad/finishedq.qml',
+    'airootfs/etc/calamares/branding/mad/mad-mark.png',
+    'airootfs/etc/calamares/branding/mad/productIcon.png',
+    'airootfs/etc/calamares/branding/mad/productLogo-large.png',
+    'airootfs/etc/calamares/branding/mad/productLogo-light.png',
+    'airootfs/etc/calamares/branding/mad/productLogo.png',
+    'airootfs/etc/calamares/branding/mad/productWelcome-light-bg.png',
+    'airootfs/etc/calamares/branding/mad/productWelcome.png',
+    'airootfs/etc/calamares/branding/mad/slideshow.qml',
+    'airootfs/etc/calamares/branding/mad/stylesheet.qss',
+    'airootfs/etc/calamares/branding/mad/welcomeq.qml',
+    'airootfs/etc/calamares/modules/contextualprocess-madkeyboard.conf',
+    'airootfs/etc/calamares/modules/finishedq.conf',
+    'airootfs/etc/calamares/modules/welcomeq.conf',
+    'airootfs/etc/lightdm/lightdm-gtk-greeter.conf',
     'airootfs/etc/pacman.d/hooks/echoos-os-release.hook',
-    'airootfs/usr/local/bin/echoos-calamares',
+    'airootfs/etc/polkit-1/rules.d/50-mad-installer.rules',
+    'airootfs/etc/xdg/autostart/mad-installer.desktop',
+    'airootfs/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml',
+    'airootfs/home/archiso/Desktop/mad-installer.desktop',
+    'airootfs/etc/xdg/autostart/echoos-wallpaper.desktop',
+    'airootfs/usr/local/bin/echoos-wallpaper-apply',
+    'airootfs/usr/local/bin/mad-installer-launcher',
+    'airootfs/usr/local/bin/mad-installer-x11',
+    'airootfs/usr/local/sbin/mad-refindconf-write',
+    'airootfs/usr/share/echoos/echo-mark.png',
     'airootfs/usr/share/echoos/os-release',
-    'airootfs/usr/share/libalpm/hooks/echoos-refind-sync.hook',
+    'airootfs/usr/share/icons/hicolor/64x64/apps/mad-installer.png',
+    'airootfs/usr/share/libalpm/hooks/mad-refind-sync.hook',
+    'airootfs/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png',
+    'airootfs/usr/share/wallpapers/EchoOS/metadata.json',
 }
 missing = sorted((legacy - removed) - built)
 extra = sorted(built - legacy)
@@ -324,13 +374,14 @@ fi
 # profiledef permissions
 # ---------------------------------------------------------------------------
 pd=build/template/profiledef.sh
-for p in /etc/sddm.conf /etc/sddm.conf.d/20-echoos-live-autologin.conf \
-         /usr/share/sddm/themes/echoos /usr/local/bin/echoos-desktop-branding \
-         /usr/local/sbin/echoos-refindconf-write /home/archiso/Desktop/echoos-install.desktop; do
+for p in /etc/lightdm/lightdm.conf /etc/lightdm/lightdm-gtk-greeter.conf \
+         /etc/lightdm/lightdm.conf.d /usr/share/echoos/echo-mark.png \
+         /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml \
+         /usr/local/sbin/mad-refindconf-write /home/archiso/Desktop/mad-installer.desktop; do
   grep -Fq "[\"$p\"]" "$pd" || bad "profiledef.sh has no permission entry for $p"
 done
-if grep -Fq '/etc/lightdm' "$pd"; then bad "profiledef.sh still has LightDM permission entries"; fi
-grep -Fq "bootmodes=('bios.syslinux'" "$pd" || bad "profiledef.sh lost bios.syslinux bootmode"
+if grep -Fq '/etc/sddm' "$pd"; then bad "profiledef.sh still has SDDM permission entries"; fi
+if grep -Fq "bios.syslinux" "$pd"; then bad "profiledef.sh still has the Arch syslinux BIOS bootmode"; fi
 grep -Fq "'uefi.systemd-boot'" "$pd" || bad "profiledef.sh lost uefi.systemd-boot bootmode"
 grep -Fq 'pacman_conf="pacman.conf"' "$pd" || bad "profiledef.sh lost pacman_conf"
 
@@ -346,6 +397,6 @@ if [[ "$failures" -ne 0 ]]; then
 fi
 printf 'ECHO OS VALIDATION: PASSED\n'
 printf 'Components: Core -> Boot -> Desktop -> Installer\n'
-printf 'Desktop: KDE Plasma 6 / KWin / SDDM Wayland\n'
+printf 'Desktop: XFCE 4 / LightDM (default ArchISO XFCE environment)\n'
 printf 'No ISO built; boot/install verification is a separate step.\n'
 exit 0

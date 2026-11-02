@@ -1,0 +1,439 @@
+/* SPDX-FileCopyrightText: no
+ * SPDX-License-Identifier: CC0-1.0
+ *
+ * MAD Installer — application theme (Professional White / Premium Minimal).
+ *
+ * Tokens are defined in docs/DESIGN-TOKENS.md:
+ *
+ *   bg        #F5F6FA   window / page background
+ *   surface   #FFFFFF   cards, input fields, sidebar
+ *   text      #171923   primary text
+ *   text2     #737987   secondary text
+ *   accent    #6952E8   primary accent (MAD purple)
+ *   accent2   #927DFF   hover accent
+ *   success   #20C987   success states
+ *   border    #E8EAF0   subtle borders
+ *   soft      #F0EDFF   soft highlight fill
+ *   danger    #E5484D   destructive / errors
+ *
+ * Selector IDs verified against Calamares 3.4.2 (src/calamares/
+ * CalamaresWindow.cpp and the upstream stylesheet example):
+ *
+ *   #mainApp #backgroundWidget      main window / content backdrop
+ *   #sidebarApp #logoApp            left step panel, its logo
+ *   #aboutButton #debugButton       sidebar utility buttons
+ *   #view-button-back               navigation: Back (secondary)
+ *   #view-button-next               navigation: Next/Install (primary)
+ *   #view-button-cancel             navigation: Cancel (destructive)
+ *
+ * The step list itself is painted by a custom C++ delegate; its colors are
+ * controlled by the style: keys in branding.desc, kept in sync with the
+ * tokens used here.
+ *
+ * White surfaces, soft grey backgrounds, MAD purple accents, large radii,
+ * generous spacing. The master Echo mark (black paths + teal pixels) reads
+ * perfectly on these light surfaces — no contrast variant is used.
+ */
+
+/* ---- Window and sidebar ------------------------------------------------ */
+
+#mainApp {
+    background-color: #F5F6FA;
+    color: #171923;
+}
+
+#backgroundWidget {
+    background-color: #F5F6FA;
+}
+
+#sidebarApp {
+    background-color: #FFFFFF;
+    border: none;
+    border-right: 1px solid #E8EAF0;
+}
+
+#logoApp {
+    background-color: transparent;
+}
+
+/* ---- Text -------------------------------------------------------------- */
+
+QLabel {
+    background-color: transparent;
+    color: #171923;
+}
+
+QWidget {
+    color: #171923;
+    background-color: transparent;
+}
+
+QWidget:disabled {
+    color: #737987;
+}
+
+#mainApp {
+    background-color: #F5F6FA;
+}
+
+/* ---- Buttons ----------------------------------------------------------- */
+
+QPushButton {
+    background-color: #FFFFFF;
+    color: #171923;
+    border: 1px solid #E8EAF0;
+    border-radius: 10px;
+    padding: 7px 18px;
+    min-height: 24px;
+}
+
+QPushButton:hover {
+    background-color: #F0EDFF;
+    border-color: #927DFF;
+    color: #6952E8;
+}
+
+QPushButton:pressed {
+    background-color: #E4DEFF;
+}
+
+QPushButton:focus {
+    border: 2px solid #927DFF;
+}
+
+QPushButton:disabled {
+    background-color: #F5F6FA;
+    color: #737987;
+    border-color: #E8EAF0;
+}
+
+/* Navigation: Back is the secondary action. */
+QPushButton#view-button-back {
+    background-color: #FFFFFF;
+    border: 1px solid #E8EAF0;
+}
+
+/* Navigation: Next/Continue is the primary action — MAD purple. */
+QPushButton#view-button-next {
+    background-color: #6952E8;
+    color: #FFFFFF;
+    border: 1px solid #6952E8;
+    font-weight: 600;
+    padding: 7px 26px;
+}
+
+QPushButton#view-button-next:hover {
+    background-color: #927DFF;
+    border-color: #927DFF;
+    color: #FFFFFF;
+}
+
+QPushButton#view-button-next:pressed {
+    background-color: #5743C9;
+    color: #FFFFFF;
+}
+
+QPushButton#view-button-next:disabled {
+    background-color: #E8EAF0;
+    color: #737987;
+    border-color: #E8EAF0;
+    font-weight: normal;
+}
+
+/* Navigation: Cancel is destructive — quiet until hovered. */
+QPushButton#view-button-cancel {
+    background-color: transparent;
+    border: 1px solid transparent;
+    color: #737987;
+}
+
+QPushButton#view-button-cancel:hover {
+    color: #E5484D;
+    border-color: #E5484D;
+    background-color: #FFF6F5;
+}
+
+/* Sidebar utility buttons stay out of the way. */
+QPushButton#aboutButton,
+QPushButton#debugButton {
+    background-color: transparent;
+    border: 1px solid transparent;
+    color: #737987;
+    padding: 2px 8px;
+}
+
+QPushButton#aboutButton:hover,
+QPushButton#debugButton:hover {
+    color: #171923;
+    border-color: #E8EAF0;
+}
+
+/* ---- Input fields ------------------------------------------------------ */
+
+QLineEdit,
+QSpinBox,
+QDoubleSpinBox,
+QComboBox {
+    background-color: #FFFFFF;
+    color: #171923;
+    border: 1.5px solid #E8EAF0;
+    border-radius: 10px;
+    padding: 6px 10px;
+    selection-background-color: #6952E8;
+    selection-color: #FFFFFF;
+}
+
+QLineEdit:focus,
+QSpinBox:focus,
+QDoubleSpinBox:focus,
+QComboBox:focus {
+    border: 2px solid #927DFF;
+}
+
+QLineEdit:disabled,
+QComboBox:disabled {
+    color: #737987;
+    background-color: #F5F6FA;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #FFFFFF;
+    color: #171923;
+    border: 1px solid #E8EAF0;
+    selection-background-color: #6952E8;
+    selection-color: #FFFFFF;
+}
+
+/* ---- Check boxes and radio buttons ------------------------------------- */
+
+QCheckBox,
+QRadioButton {
+    color: #171923;
+    spacing: 9px;
+    background-color: transparent;
+}
+
+QCheckBox:disabled,
+QRadioButton:disabled {
+    color: #737987;
+}
+
+QCheckBox::indicator,
+QRadioButton::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid #E8EAF0;
+    background-color: #FFFFFF;
+}
+
+QCheckBox::indicator {
+    border-radius: 5px;
+}
+
+QRadioButton::indicator {
+    border-radius: 8px;
+}
+
+QCheckBox::indicator:hover,
+QRadioButton::indicator:hover {
+    border-color: #927DFF;
+}
+
+QCheckBox::indicator:checked,
+QRadioButton::indicator:checked {
+    background-color: #6952E8;
+    border-color: #6952E8;
+}
+
+/* ---- Lists, trees, tables (disk/partition views) ------------------------ */
+
+QListWidget,
+QListView,
+QTreeView,
+QTableView,
+QTreeWidget,
+QTableWidget {
+    background-color: #FFFFFF;
+    color: #171923;
+    border: 1px solid #E8EAF0;
+    border-radius: 12px;
+    padding: 3px;
+    selection-background-color: #6952E8;
+    selection-color: #FFFFFF;
+    alternate-background-color: #FAFAFE;
+}
+
+QListWidget::item,
+QListView::item,
+QTreeView::item {
+    padding: 5px 8px;
+    border: none;
+}
+
+QListWidget::item:hover,
+QListView::item:hover,
+QTreeView::item:hover {
+    background-color: #F0EDFF;
+}
+
+QHeaderView::section {
+    background-color: #F5F6FA;
+    color: #737987;
+    border: none;
+    border-bottom: 1px solid #E8EAF0;
+    padding: 5px 8px;
+}
+
+/* Partition bar: blends with the light background; segment colors are
+   drawn by the filesystem-type delegate. */
+#partitionBarView {
+    background-color: #FFFFFF;
+    border: 1px solid #E8EAF0;
+    border-radius: 12px;
+}
+
+/* ---- Scroll-area viewports ----------------------------------------------
+   Calamares scroll-area viewports (summary page, partition "Current:" bar)
+   otherwise inherit the system light palette; keep them on the soft page
+   background so text never renders on a mismatched surface. */
+
+QAbstractScrollArea,
+QScrollArea,
+QTextBrowser,
+QTextEdit,
+QPlainTextEdit {
+    background-color: #F5F6FA;
+    color: #171923;
+    border: none;
+}
+
+QScrollArea > QWidget > QWidget {
+    background-color: transparent;
+}
+
+QTextBrowser, QTextEdit, QPlainTextEdit {
+    selection-background-color: #6952E8;
+    selection-color: #FFFFFF;
+}
+
+#scrollAreaWidgetContents {
+    background-color: transparent;
+}
+
+#bootInfoIcon, #bootInfoLable, #deviceInfoIcon, #defineInfoLabel {
+    color: #171923;
+    background-color: transparent;
+}
+
+/* ---- Progress ----------------------------------------------------------- */
+
+QProgressBar {
+    background-color: #E8EAF0;
+    border: none;
+    border-radius: 6px;
+    color: #171923;
+    text-align: center;
+    min-height: 20px;
+    font-weight: 600;
+}
+
+QProgressBar::chunk {
+    background-color: #6952E8;
+    border-radius: 6px;
+}
+
+/* ---- Scrollbars ---------------------------------------------------------- */
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical {
+    background: #D9DCE7;
+    border-radius: 4px;
+    min-height: 24px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #B9BFD1;
+}
+
+QScrollBar:horizontal {
+    background: transparent;
+    height: 10px;
+    margin: 2px;
+}
+
+QScrollBar::handle:horizontal {
+    background: #D9DCE7;
+    border-radius: 4px;
+    min-width: 24px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: #B9BFD1;
+}
+
+QScrollBar::add-line,
+QScrollBar::sub-line {
+    width: 0px;
+    height: 0px;
+}
+
+QScrollBar::add-page,
+QScrollBar::sub-page {
+    background: none;
+}
+
+/* ---- Dialogs, tooltips, menus ------------------------------------------- */
+
+QMessageBox,
+QDialog {
+    background-color: #FFFFFF;
+    color: #171923;
+}
+
+QToolTip {
+    background-color: #171923;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 8px;
+}
+
+QMenu {
+    background-color: #FFFFFF;
+    color: #171923;
+    border: 1px solid #E8EAF0;
+}
+
+QMenu::item:selected {
+    background-color: #6952E8;
+    color: #FFFFFF;
+}
+
+/* ---- Group boxes (summary page cards) ------------------------------------ */
+
+QGroupBox {
+    background-color: #FFFFFF;
+    border: 1px solid #E8EAF0;
+    border-radius: 14px;
+    margin-top: 14px;
+    padding: 10px;
+    color: #171923;
+    font-weight: 600;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 5px;
+    color: #6952E8;
+}

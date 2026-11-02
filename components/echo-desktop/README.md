@@ -2,11 +2,12 @@
 
 Echo Desktop owns the graphical session of Echo OS:
 
-- KDE Plasma 6 packages and Plasma applications;
-- KWin, the Plasma Wayland session, and the SDDM display manager;
-- the Echo OS SDDM theme, wallpaper, icons, fonts, and first-login branding;
-- the live-session SDDM autologin policy;
-- the enabled `display-manager.service` link for the live medium.
+- the **default ArchISO XFCE desktop environment** (XFCE 4 + goodies set),
+  matching the official Arch Linux XFCE ISO;
+- **LightDM** with the `lightdm-gtk-greeter`, Echo-branded;
+- the Echo OS wallpaper and Echo mark;
+- the live-session LightDM autologin policy and the enabled
+  `display-manager.service` link for the live medium.
 
 It depends on `echo-core` for the kernel, firmware, system services, live
 account, and base system. It does **not** own or replace Core configuration.
@@ -17,55 +18,47 @@ account, and base system. It does **not** own or replace Core configuration.
 | --- | --- |
 | Kernel, firmware, initramfs tooling, systemd services, live account | `echo-core` |
 | Boot menus, EFI assets, bootloader packages | `echo-boot` |
-| Calamares, installer launcher, installer branding, target boot policy | `echo-install` |
-| KDE Plasma, KWin, SDDM, wallpapers, themes, desktop apps, live autologin | `echo-desktop` |
-
-The live-only SDDM autologin drop-in is excluded from the installed target by
-the Installer-owned `unpackfs` exclude list. The installed system therefore
-boots to the normal SDDM login screen.
-
-Echo Desktop does not replace Core's `display-manager.service` provider
-aliases. It supplies a live-only symlink from
-`/etc/systemd/system/display-manager.service` to
-`/usr/lib/systemd/system/sddm.service`; that symlink is excluded from the
-installed target, where Calamares enables `sddm.service` directly.
+| MAD Installer (Calamares), launcher, branding, target boot policy | `mad-install` |
+| XFCE, LightDM, wallpapers, greeter branding, live autologin | `echo-desktop` |
 
 ## Layout
 
 ```text
-packages/packages.x86_64       KDE Plasma + SDDM package set
+packages/packages.x86_64       XFCE + LightDM package set
 packages/packages.aarch64      same desktop set for the ARM profile
 config/airootfs/               common desktop payload (live and target)
-config/live/                   live-only SDDM autologin and DM enable link
+config/live/                   live-only LightDM autologin and DM enable link
+scripts/validate-desktop.sh    component-local validation
 ```
 
 The component is assembled after `echo-core` and `echo-boot`, and before
-`echo-install`.
+`mad-install`.
 
-## SDDM and the live session
+## LightDM and the live session
 
-- `config/airootfs/etc/sddm.conf` is common configuration. It selects
-  `DisplayServer=wayland`, the `echoos` theme, and Plasma's Wayland session
-  directories.
-- `config/live/etc/sddm.conf.d/20-echoos-live-autologin.conf` is live-only
-  autologin for `archiso` into `plasma.desktop`.
+- `config/airootfs/etc/lightdm/lightdm.conf` is common configuration:
+  `lightdm-gtk-greeter`, `user-session=xfce`, `/etc/lightdm/Xsession`.
+- `config/airootfs/etc/lightdm/lightdm-gtk-greeter.conf` brands the greeter:
+  the Echo wallpaper as background and the Echo mark as logo.
+- `config/live/etc/lightdm/lightdm.conf.d/20-autologin.conf` is live-only
+  autologin for `archiso` into the `xfce` session. It is excluded from the
+  installed target by the MAD Installer unpackfs exclude list, so an installed
+  system always shows the normal LightDM login screen.
 - `config/live/etc/systemd/system/display-manager.service` points the live
-  medium at SDDM.
-- `config/airootfs/usr/share/sddm/themes/echoos/` contains the greeter. Its
-  `metadata.desktop` **must** declare `QtVersion=6` and
-  `MainScript=Main.qml`. Without the Qt version, SDDM selects the Qt5 greeter
-  (`/usr/bin/sddm-greeter`) and fails because the image has no Qt5 libraries.
-  `build/validate.sh` enforces this.
+  medium at LightDM; the MAD Installer enables `lightdm.service` directly on
+  the installed target.
 
-## First-login branding
+## Desktop defaults
 
-`config/airootfs/usr/local/bin/echoos-desktop-branding` runs from
-`config/airootfs/etc/xdg/autostart/echoos-plasma-branding.desktop`. It applies
-the Echo OS wallpaper once per user and writes
-`$XDG_CONFIG_HOME/echoos-desktop-branded` only after
-`plasma-apply-wallpaperimage` succeeds. It retries for up to 60 seconds because
-autostart can run before `plasmashell` registers its D-Bus service. A failed
-attempt leaves no marker, so a later login can still brand the desktop.
+`config/airootfs/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml`
+applies the Echo OS wallpaper to newly created user accounts via XFCE's
+xfconf defaults, so first login lands on a branded desktop without any
+scripting.
 
-The shipped wallpaper is the user-provided asset and is intentionally left
-unchanged.
+## Wallpaper
+
+`config/airootfs/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png`
+is an original Echo OS asset generated from the official Echo mark
+(`mad-install/calamares/branding/mad/echo-mark.svg`): a dark surface with the
+brand teal (`#019099`) glow and the centered mark. It carries no third-party
+content.

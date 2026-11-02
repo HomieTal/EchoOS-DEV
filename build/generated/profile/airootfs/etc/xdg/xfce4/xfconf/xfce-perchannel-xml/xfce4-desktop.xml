@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Echo OS default XFCE desktop: apply the Echo OS wallpaper to every
+  monitor/workspace for newly created user accounts.
+-->
+<channel name="xfce4-desktop" version="1.0">
+  <property name="backdrop" type="empty">
+    <property name="screen0" type="empty">
+      <property name="monitor0" type="empty">
+        <property name="workspace0" type="empty">
+          <property name="image-path" type="string" value="/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png"/>
+          <property name="last-image" type="string" value="/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png"/>
+          <property name="image-style" type="uint" value="5"/>
+          <property name="image-show" type="bool" value="true"/>
+        </property>
+        <property name="image-path" type="string" value="/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png"/>
+          <property name="last-image" type="string" value="/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png"/>
+        <property name="image-style" type="uint" value="5"/>
+        <property name="last-style" type="uint" value="5"/>
+      </property>
+    </property>
+  </property>
+</channel>

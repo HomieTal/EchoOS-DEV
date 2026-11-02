@@ -1,23 +1,24 @@
-# Echo Desktop: KDE Plasma 6, KWin, SDDM and the desktop application set.
+# Echo Desktop: the default ArchISO XFCE desktop environment.
+#
+# Mirrors the desktop layer of the official Arch Linux XFCE ISO:
+# XFCE 4 with its goodies set, LightDM with the GTK greeter, GVfs,
+# PipeWire audio, and the X.Org stack. No KDE/Plasma or SDDM packages.
 accountsservice
 adwaita-icon-theme
-ark
-breeze-cursors
-dolphin
-gwenview
-hicolor-icon-theme
-kate
-kcalc
-konsole
-kwalletmanager
-plasma-meta
-qt6-wayland
-sddm
-sddm-kcm
+gvfs
+lightdm
+lightdm-gtk-greeter
+lightdm-gtk-greeter-settings
+pavucontrol
+pipewire
+pipewire-alsa
+pipewire-pulse
 ttf-dejavu
+wireplumber
 xdg-user-dirs
 xdg-utils
-xkeyboard-config
+xfce4
+xfce4-goodies
 xorg-server
 xorg-setxkbmap
 xorg-xhost

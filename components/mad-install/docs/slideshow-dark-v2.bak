@@ -1,0 +1,161 @@
+/* SPDX-FileCopyrightText: no
+ * SPDX-License-Identifier: CC0-1.0
+ *
+ * MAD Installer slideshow.
+ *
+ * Shown during the execution step, i.e. while the system is actually being
+ * installed. Content is factual and calm: what MAD Installer is doing, and
+ * what will happen after. No fake progress percentages — the real progress
+ * bar is rendered by Calamares outside the slideshow.
+ *
+ * Tokens: docs/DESIGN-TOKENS.md (charcoal-900 background, Echo teal accent,
+ * echo-mark-light.svg derived images for dark surfaces).
+ */
+
+import QtQuick 2.0;
+import calamares.slideshow 1.0;
+
+Presentation
+{
+    id: presentation
+
+    function nextSlide() {
+        presentation.goToNextSlide();
+    }
+
+    Timer {
+        id: advanceTimer
+        interval: 7000
+        running: presentation.activatedInCalamares
+        repeat: true
+        onTriggered: nextSlide()
+    }
+
+    // Shared chrome for every slide.
+    component SlideChrome: Rectangle {
+        anchors.fill: parent
+        color: "#16181c"
+
+        Rectangle {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 3
+            color: "#019099"
+        }
+    }
+
+    component SlideFooter: Text {
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottomMargin: 28
+        text: "MAD Installer — Powered by Echo OS"
+        color: "#9aa3ad"
+        font.pixelSize: 14
+    }
+
+    component SlideTitle: Text {
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.topMargin: 48
+        color: "#e8eaed"
+        font.pixelSize: 30
+        font.weight: Font.DemiBold
+    }
+
+    component SlideBody: Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        color: "#9aa3ad"
+        font.pixelSize: 17
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
+    }
+
+    // --- Slide 1: identity -------------------------------------------------
+    Slide {
+        SlideChrome {}
+
+        Image {
+            source: "productWelcome.png"
+            anchors.centerIn: parent
+            anchors.verticalCenterOffset: -30
+            fillMode: Image.PreserveAspectFit
+        }
+
+        Column {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: 40
+            spacing: 6
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "MAD Installer"
+                color: "#ffffff"
+                font.pixelSize: 34
+                font.weight: Font.DemiBold
+            }
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "Powered by Echo OS"
+                color: "#9aa3ad"
+                font.pixelSize: 16
+            }
+        }
+
+        SlideFooter {}
+    }
+
+    // --- Slide 2: what is happening -----------------------------------------
+    Slide {
+        SlideChrome {}
+
+        SlideTitle {
+            text: "Installing Echo OS"
+        }
+
+        SlideBody {
+            anchors.top: parent.top
+            anchors.topMargin: 110
+            width: parent.width - 160
+            text: "Echo OS is being copied to the selected disk and configured " +
+                  "for your language, keyboard, timezone and user account. " +
+                  "This is performed offline — no network connection is used."
+        }
+
+        Image {
+            source: "productLogo-light.png"
+            anchors.centerIn: parent
+            anchors.verticalCenterOffset: 40
+            fillMode: Image.PreserveAspectFit
+        }
+
+        SlideFooter {}
+    }
+
+    // --- Slide 3: what comes next -------------------------------------------
+    Slide {
+        SlideChrome {}
+
+        SlideTitle {
+            text: "Almost ready"
+        }
+
+        SlideBody {
+            anchors.top: parent.top
+            anchors.topMargin: 110
+            width: parent.width - 160
+            text: "When installation completes, the boot menu (rEFInd) is set " +
+                  "up and the installer will offer to restart into your new " +
+                  "Echo OS system."
+        }
+
+        Image {
+            source: "productWelcome.png"
+            anchors.centerIn: parent
+            anchors.verticalCenterOffset: 40
+            fillMode: Image.PreserveAspectFit
+        }
+
+        SlideFooter {}
+    }
+}

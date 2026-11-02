@@ -2,7 +2,6 @@ component	source_prefix	destination_prefix
 echo-core	airootfs	airootfs
 echo-core	live	airootfs
 echo-boot	config/efiboot	efiboot
-echo-boot	config/syslinux	syslinux
 echo-boot	config/grub	grub
 echo-boot	config/initramfs	airootfs/etc/mkinitcpio.conf.d
 echo-boot	config/EFI	EFI
@@ -16,7 +15,7 @@ echo-boot	config/refind_x64.efi	refind_x64.efi
 echo-boot	config/airootfs	airootfs
 echo-desktop	config/airootfs	airootfs
 echo-desktop	config/live	airootfs
-echo-install	calamares	airootfs/etc/calamares
-echo-install	config/live	airootfs/etc
-echo-install	config/home	airootfs/home
-echo-install	config/rootfs	airootfs
+mad-install	calamares	airootfs/etc/calamares
+mad-install	config/live	airootfs/etc
+mad-install	config/home	airootfs/home
+mad-install	config/rootfs	airootfs

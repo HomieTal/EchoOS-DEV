@@ -1,19 +1,21 @@
 # Echo OS
 
-An Arch Linux–based live system with a KDE Plasma desktop and a graphical
-Calamares installer, built from independently maintained components.
+An Arch Linux–based live system with an XFCE desktop and the **MAD Installer**
+(Calamares), built from independently maintained components.
+
+Version 4.0 (Fox) — image `2026.10.31`.
 
 ## Overview
 
-- **Live environment**: KDE Plasma 6 on Wayland (XWayland for X11 apps),
-  autologged in as the `archiso` user through SDDM.
-- **Installer**: [Calamares](https://calamares.io/) (stock branding) launched
-  from the "Install Echo OS" desktop shortcut and autostarted once in the live
-  session.
+- **Live environment**: XFCE 4 (the ArchISO XFCE baseline), autologged in as
+  the `archiso` user through LightDM.
+- **Installer**: **MAD Installer**, a Calamares frontend with Echo OS branding.
+  It is launched from the "MAD Installer" desktop shortcut and autostarts once
+  in the live session.
 - **Installation method**: copy of the live squashfs to the target disk via
   `unpackfs` (offline-capable; no package downloads required).
-- **Bootloaders**: rEFInd for UEFI (live medium and installed system), Syslinux
-  for BIOS live boot.
+- **Bootloaders**: rEFInd for UEFI (live medium and installed system). The live
+  medium is UEFI-only; the legacy Syslinux/BIOS live path is no longer built.
 - **Local packages**: Calamares is built from source and served via a local
   `[echo]` repository in `packages/`.
 
@@ -22,9 +24,9 @@ Calamares installer, built from independently maintained components.
 | Component | Owns |
 | --- | --- |
 | `components/echo-core` | kernel, firmware, base system, services, networking, live account |
-| `components/echo-desktop` | Plasma, SDDM, session/branding defaults, wallpapers, desktop apps |
-| `components/echo-install` | Calamares, modules, installer autostart/shortcut, installer policy |
-| `components/echo-boot` | rEFInd, EFI payloads, Syslinux, boot menus |
+| `components/echo-boot` | rEFInd, EFI payloads, boot menus, live initramfs config |
+| `components/echo-desktop` | XFCE, LightDM, session/branding defaults, wallpapers, desktop apps |
+| `components/mad-install` | MAD Installer (Calamares), modules, installer autostart/shortcut, target boot policy |
 | `build/` | assembly, shared templates, package merging, validation |
 
 `build/assemble.sh` merges the components into `build/generated/profile`; the
@@ -55,17 +57,16 @@ existing ISO).
 
 ## Installation
 
-1. Boot the ISO (UEFI or BIOS).
-2. In the Plasma live session, use the **Install Echo OS** desktop shortcut
-   (the installer also autostarts once).
-3. Follow the Calamares wizard (locale, keyboard, partitioning, user creation).
-4. Reboot into the installed system (SDDM login, Plasma session).
+1. Boot the ISO in UEFI mode.
+2. In the XFCE live session, use the **MAD Installer** desktop shortcut (the
+   installer also autostarts once).
+3. Follow the wizard (locale, keyboard, partitioning, user creation).
+4. Reboot into the installed system (LightDM login, XFCE session).
 
 ## Notes
 
-- Calamares uses the stock `default` branding component for the installer UI;
-  Echo OS branding is applied to the desktop (look-and-feel, wallpaper, SDDM
-  background).
+- MAD Installer carries the Echo OS installer branding; the desktop uses the
+  Echo wallpaper, mark, and LightDM greeter branding.
 - The live user is removed from the installed target; the account you create
   during installation is the only user.
 - The target's pacman package databases are refreshed during first boot / via

@@ -1,0 +1,90 @@
+# Maintainer: Echo OS
+# Contributor: Echo OS build system
+#
+# Independent package recipe for MAD Installer — the Echo OS installer
+# frontend. This package carries the MAD Installer identity: Calamares
+# configuration, MAD branding, the launcher, and desktop integration.
+#
+# The Calamares RUNTIME is a separate package (see ../packages/PKGBUILD);
+# this package must be rebuildable and installable independently of the
+# Echo OS ISO assembly, which is the requirement for standalone use and
+# future frontends/backends.
+#
+# NOTE: the live polkit rule and autostart are live-environment concerns
+# and are NOT shipped here; they are overlaid into the live image by the
+# assembly (components/mad-install/config/live). An installed Echo OS
+# system must not autostart an installer.
+
+pkgname=mad-installer
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="MAD Installer — Powered by Echo OS (Calamares-based system installer frontend)"
+url="https://echoos.invalid/"   # no project website yet; keep empty of fake URLs
+license=("GPL-3.0-or-later")    # component scripts/config are project-original
+arch=("x86_64")                 # aarch64 has no installer (see README/ROADMAP)
+depends=(
+  "calamares"      # local Echo OS build, 3.4.2
+  "kconfig"        # explicit KF6 runtime deps (see ../packages/packages.x86_64)
+  "kcrash"
+  "kpackage"
+)
+makedepends=()
+optdepends=("refind: UEFI bootloader configured by the installer"
+            "grub: BIOS (legacy) bootloader path")
+provides=("echo-install")
+conflicts=("echo-install")
+replaces=()
+backup=("etc/calamares/settings.conf")
+
+# NOTE: resolve $srcdir inside the functions — it is not set when the
+# PKGBUILD is sourced.
+build() {
+  local _pkgsrc="$srcdir/mad-install"
+
+  # No compilation: this package is configuration, branding and scripts.
+  # Validate before shipping.
+  test -f "$_pkgsrc/calamares/settings.conf"
+  test -f "$_pkgsrc/calamares/branding/mad/branding.desc"
+  test -f "$_pkgsrc/calamares/branding/mad/slideshow.qml"
+}
+
+package() {
+  local d="$pkgdir"
+  local _pkgsrc="$srcdir/mad-install"
+
+  # --- Calamares configuration + MAD branding -----------------------------
+  install -d "$d/etc/calamares/modules"
+  install -d "$d/etc/calamares/branding"
+  cp -a "$_pkgsrc/calamares/branding/mad" "$d/etc/calamares/branding/mad"
+  install -Dm644 "$_pkgsrc/calamares/settings.conf" \
+                 "$d/etc/calamares/settings.conf"
+  for f in "$_pkgsrc/calamares/modules/"*.conf; do
+    install -Dm644 "$f" "$d/etc/calamares/modules/$(basename "$f")"
+  done
+  install -Dm644 "$_pkgsrc/calamares/modules/unpackfs/exclude-list.txt" \
+                 "$d/etc/calamares/modules/unpackfs/exclude-list.txt"
+
+  # --- Launcher and helpers ------------------------------------------------
+  install -Dm755 "$_pkgsrc/config/rootfs/usr/local/bin/mad-installer-launcher" \
+                 "$d/usr/local/bin/mad-installer-launcher"
+  install -Dm755 "$_pkgsrc/config/rootfs/usr/local/bin/mad-installer-x11" \
+                 "$d/usr/local/bin/mad-installer-x11"
+  install -Dm755 "$_pkgsrc/config/rootfs/usr/local/sbin/mad-refindconf-write" \
+                 "$d/usr/local/sbin/mad-refindconf-write"
+  install -Dm644 "$_pkgsrc/config/rootfs/usr/share/libalpm/hooks/mad-refind-sync.hook" \
+                 "$d/usr/share/libalpm/hooks/mad-refind-sync.hook"
+
+  # --- Desktop integration --------------------------------------------------
+  install -Dm644 "$_pkgsrc/config/home/archiso/Desktop/mad-installer.desktop" \
+                 "$d/usr/share/applications/mad-installer.desktop"
+  install -Dm644 "$_pkgsrc/config/rootfs/usr/share/icons/hicolor/64x64/apps/mad-installer.png" \
+                 "$d/usr/share/icons/hicolor/64x64/apps/mad-installer.png"
+
+  # --- Documentation --------------------------------------------------------
+  for doc in README.md ARCHITECTURE.md DEPENDENCIES.md ROADMAP.md TESTING.md \
+             MIGRATION.md LICENSE; do
+    [ -f "$_pkgsrc/$doc" ] && \
+      install -Dm644 "$_pkgsrc/$doc" \
+        "$d/usr/share/doc/mad-installer/$doc"
+  done
+}

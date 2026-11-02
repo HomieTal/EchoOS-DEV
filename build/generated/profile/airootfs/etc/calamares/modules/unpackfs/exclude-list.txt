@@ -2,7 +2,7 @@
 /etc/pacman.d/hooks/
 /etc/ssh/sshd_config.d/10-archiso.conf
 /etc/sudoers.d/archiso
-/etc/sddm.conf.d/
+/etc/lightdm/lightdm.conf.d/
 /etc/systemd/system/getty@tty1.service.d/autologin.conf
 /etc/systemd/system/display-manager.service
 /etc/systemd/system/choose-mirror.service
@@ -21,8 +21,8 @@
 /root/.automated_script.sh
 /usr/local/bin/Installation_guide
 /etc/polkit-1/rules.d/49-nopasswd_global.rules
-/etc/polkit-1/rules.d/50-calamares.rules
+/etc/polkit-1/rules.d/50-mad-installer.rules
 /etc/security/faillock.conf
-/etc/xdg/autostart/echoos-install.desktop
-/usr/local/bin/echoos-install-launcher
-/usr/local/bin/echoos-calamares
+/etc/xdg/autostart/mad-installer.desktop
+/usr/local/bin/mad-installer-launcher
+/usr/local/bin/mad-installer-x11

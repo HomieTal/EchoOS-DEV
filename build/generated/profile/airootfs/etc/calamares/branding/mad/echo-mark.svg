@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="121 97 300 300" role="img" aria-label="Echo OS mark">
+  <!-- lowercase "e": annulus centre (278,255), outer R 135, inner r 85,
+       split into a top arc + crossbar and a bottom arc, with pixel squares -->
+  <path fill="#0b0b0b" d="M278 120A135 135 0 0 1 411.6 274L360.9 274A85 85 0 0 0 278 170Z"/>
+  <path fill="#0b0b0b" d="M278 234H413V274H278Z"/>
+  <path fill="#0b0b0b" d="M143 255A135 135 0 0 0 278 390L278 340A85 85 0 0 1 193 255Z"/>
+  <rect x="129" y="104" width="60" height="60" fill="#019099"/>
+  <rect x="204" y="146" width="42" height="42" fill="#019099"/>
+  <rect x="159" y="182" width="23" height="23" fill="#0b0b0b"/>
+</svg>

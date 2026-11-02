@@ -1,7 +1,0 @@
-[General]
-# Echo OS live session: kded6 would otherwise auto-open the KDE Welcome
-# Center on first login, directly over the autostarted Calamares installer.
-# A version above any real Plasma release suppresses the auto-launch for
-# the live user only; /home/archiso is excluded from the installed system,
-# so new installations keep Plasma's normal first-login Welcome Center.
-LastSeenVersion=9999

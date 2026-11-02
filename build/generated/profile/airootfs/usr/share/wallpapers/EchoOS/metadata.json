@@ -1,12 +1,7 @@
 {
-    "KPlugin": {
-        "Authors": [
-            {
-                "Name": "Echo OS"
-            }
-        ],
-        "Id": "EchoOS",
-        "License": "Proprietary",
-        "Name": "Echo OS"
+    "wallpaper": {
+        "properties": {
+            "FillMode": 2
+        }
     }
 }

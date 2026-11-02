@@ -1,0 +1,68 @@
+#!/bin/sh
+# Echo OS wallpaper enforcement.
+#
+# xfdesktop names its backdrop nodes after the real RandR output
+# (Virtual1, eDP-1, VNC-0, "default", ...) and (since 4.20) reads the
+# image path from the "image-path" property; the legacy "last-image"
+# name is kept for older releases. A static /etc/xdg default for
+# "monitor0" therefore never matches, and xfdesktop paints its own
+# compiled-in default instead of the Echo OS wallpaper.
+#
+# This script applies the Echo OS wallpaper to the nodes of every real
+# output plus the usual fallbacks, in both property generations, and
+# refreshes any node xfdesktop has already created.
+WALLPAPER=/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png
+
+[ -f "$WALLPAPER" ] || exit 0
+
+set_string() {
+    xfconf-query -c xfce4-desktop -p "$1" -n -t string -s "$2" >/dev/null 2>&1 || true
+}
+set_uint() {
+    xfconf-query -c xfce4-desktop -p "$1" -n -t uint -s "$2" >/dev/null 2>&1 || true
+}
+set_bool() {
+    xfconf-query -c xfce4-desktop -p "$1" -n -t bool -s "$2" >/dev/null 2>&1 || true
+}
+
+apply_monitor() {
+    m="$1"
+    for base in "/backdrop/screen0/monitor${m}" "/backdrop/screen0/monitor${m}/workspace0"; do
+        set_string "${base}/image-path" "$WALLPAPER"
+        set_string "${base}/last-image" "$WALLPAPER"
+        set_uint  "${base}/image-style" 5
+        set_uint  "${base}/last-style" 5
+        set_bool  "${base}/image-show" true
+    done
+}
+
+# wait up to 30 s for xfconf (and xfdesktop) to be up
+i=0
+while [ "$i" -lt 60 ]; do
+    if xfconf-query -c xfce4-desktop -l >/dev/null 2>&1; then
+        break
+    fi
+    i=$((i + 1))
+    sleep 0.5
+done
+
+# real RandR outputs first — these are the node names xfdesktop matches
+for m in $(xrandr --query 2>/dev/null | awk '/ connected/{print $1}'); do
+    apply_monitor "$m"
+done
+
+# common fallbacks for environments where RandR naming is unavailable
+apply_monitor "0"
+apply_monitor "default"
+apply_monitor "Virtual1"
+apply_monitor "VNC-0"
+
+# refresh every image node xfdesktop has already created
+xfconf-query -c xfce4-desktop -l 2>/dev/null | grep -E '/(last-image|image-path)$' | while IFS= read -r prop; do
+    set_string "$prop" "$WALLPAPER"
+done
+xfconf-query -c xfce4-desktop -l 2>/dev/null | grep -E '/(image-style|last-style)$' | while IFS= read -r prop; do
+    set_uint "$prop" 5
+done
+
+exit 0

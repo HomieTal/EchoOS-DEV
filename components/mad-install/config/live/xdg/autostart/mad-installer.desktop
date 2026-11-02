@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=MAD Installer (autostart)
+Comment=Start the Echo OS installer once the live desktop is ready
+Exec=/usr/local/bin/mad-installer-launcher
+TryExec=/usr/local/bin/mad-installer-launcher
+Icon=mad-installer
+Terminal=false
+NoDisplay=true
+Categories=System;

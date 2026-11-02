@@ -11,15 +11,18 @@ profile in `build/generated/profile` is the input to `mkarchiso`. The legacy
 | --- | --- | ---: |
 | `echo-core` | Base system, kernel/firmware, initramfs tooling, filesystems, networking, services, live account and rescue tooling | 10 |
 | `echo-boot` | Live boot menus, rEFInd/EFI assets, Syslinux, live initramfs config and boot packages | 20 |
-| `echo-desktop` | KDE Plasma 6, KWin, SDDM/Wayland, Echo theme, wallpaper, desktop apps, live autologin | 30 |
-| `echo-install` | Calamares, installer branding, live installer launcher, installed-system service and boot policy | 40 |
+| `echo-desktop` | XFCE 4, LightDM, Echo theme, wallpaper, desktop apps, live autologin | 30 |
+| `mad-install` | MAD Installer (Calamares), branding, live installer launcher, installed-system service and boot policy | 40 |
 | Shared build infrastructure | ArchISO profile definition, pacman config, package-list assembly, local repository, build/validation scripts | n/a |
+
+The retired `echo-install` component is retained under `components/echo-install`
+as a reference for the MAD Installer fork; it is not assembled or validated.
 
 ## Dependencies
 
 - `echo-core` is the base layer and has no component dependency.
-- `echo-boot`, `echo-desktop`, and `echo-install` depend on `echo-core`.
-- `echo-install` also depends on `echo-boot` and `echo-desktop`.
+- `echo-boot`, `echo-desktop`, and `mad-install` depend on `echo-core`.
+- `mad-install` also depends on `echo-boot` and `echo-desktop`.
 - Dependencies must be ordered before their dependants in
   `build/config/components.tsv`; the assembler and validator enforce this.
 
@@ -86,10 +89,9 @@ used during the migration:
 ## Validation
 
 Run `./build/validate.sh`. It checks component structure, order, dependencies,
-overlay safety, package ownership and duplicates, the SDDM/Plasma desktop
-contract, the Calamares installer contract, the live/target boundary, and
-assembly for both architectures. A passing run prints
-`ECHO OS VALIDATION: PASSED`.
+overlay safety, package ownership and duplicates, the XFCE/LightDM desktop
+contract, the MAD Installer contract, the live/target boundary, and assembly
+for both architectures. A passing run prints `ECHO OS VALIDATION: PASSED`.
 
 Validation does not build or boot an ISO. Use `./build.sh` for an ISO and a
 disposable UEFI VM for boot verification.

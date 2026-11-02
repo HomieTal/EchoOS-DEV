@@ -1,0 +1,34 @@
+// SPDX-FileCopyrightText: no
+// SPDX-License-Identifier: CC0-1.0
+//
+// Allow the live user to start the graphical installer without being
+// asked for a password.
+//
+// The stock Calamares polkit action (io.calamares.calamares.policy)
+// requires authentication as an administrator.  Without this rule the
+// desktop launcher ("Applications -> Install System", Exec=pkexec
+// calamares) would sit in front of an authentication dialog on every
+// start.
+//
+// This rule is excluded from the installed system (see
+// /etc/calamares/modules/unpackfs/exclude-list.txt).
+
+polkit.addRule(function (action, subject) {
+    if (action.id === "io.calamares.calamares.pkexec.run" &&
+        subject.user === "archiso" &&
+        subject.local === true) {
+        return polkit.Result.YES;
+    }
+});
+
+// pkexec on the installer wrapper is a generic pkexec action (Calamares'
+// own policy file matches /usr/bin/calamares, not the XWayland wrapper).
+// The live account already has passwordless sudo, so this only keeps the
+// autostart path from stalling on a polkit dialog.
+polkit.addRule(function (action, subject) {
+    if (action.id === "org.freedesktop.policykit.exec" &&
+        subject.user === "archiso" &&
+        subject.local === true) {
+        return polkit.Result.YES;
+    }
+});

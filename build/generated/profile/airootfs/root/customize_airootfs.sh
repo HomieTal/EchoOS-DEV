@@ -67,6 +67,29 @@ if [[ -d "${LIVE_HOME}" ]]; then
     chmod 0750 "${LIVE_HOME}"
 fi
 
+# --- boot loader: rEFInd only --------------------------------------------
+# mkarchiso's 'uefi.systemd-boot' bootmode copies
+# /usr/lib/systemd/boot/efi/systemd-bootx64.efi to EFI/BOOT/BOOTx64.EFI on
+# both the ISO 9660 tree and the EFI system partition image. Echo OS ships
+# rEFInd as that same file (airootfs/boot/BOOTx64.EFI), so swapping it in
+# here makes rEFInd the one and only boot loader of the live medium —
+# the Arch-branded syslinux BIOS path was removed from the profile.
+if [[ -f /boot/BOOTx64.EFI && -f /usr/lib/systemd/boot/efi/systemd-bootx64.efi ]]; then
+    install -m 0644 /boot/BOOTx64.EFI /usr/lib/systemd/boot/efi/systemd-bootx64.efi
+    echo "customize_airootfs: BOOTx64.EFI is now rEFInd"
+fi
+
+# --- wallpaper: Echo OS only ----------------------------------------------
+# Remove every stock background so the Echo OS wallpaper is the only
+# choice, then keep a copy of it as xfdesktop's compiled-in default
+# (xfce-x.svg) — when no backdrop node matches the monitor name,
+# xfdesktop loads that exact path, and GdkPixbuf sniffs the content,
+# not the extension.
+rm -rf /usr/share/backgrounds/xfce
+mkdir -p /usr/share/backgrounds/xfce
+cp /usr/share/wallpapers/EchoOS/contents/images/1920x1080.png \
+   /usr/share/backgrounds/xfce/xfce-x.svg
+
 # --- report --------------------------------------------------------------
 echo "customize_airootfs: live user '${LIVE_USER}' ready"
 getent passwd "${LIVE_USER}"

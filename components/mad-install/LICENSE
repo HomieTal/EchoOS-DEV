@@ -1,0 +1,24 @@
+MAD Installer — component licensing
+===================================
+
+The files of this component (components/mad-install) that carry the
+SPDX-License-Identifier "CC0-1.0" are project-original Echo OS work and are
+released under CC0 1.0 (public domain dedication):
+
+    CC0 1.0 Universal
+    https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+to the extent legally possible. The Echo OS mark (echo-mark.svg and its
+derivatives in calamares/branding/mad/) is project-original artwork of the
+Echo OS project.
+
+Third-party components are NOT re-licensed by this file:
+
+  - The Calamares runtime is GPL-3.0-or-later and is distributed as its own
+    package (components/mad-install/packages/PKGBUILD); its license texts
+    and copyright notices ship with that package and remain intact.
+  - Files derived from Calamares' own branding example retain their original
+    SPDX headers where present.
+
+No legally required third-party attribution has been removed in the
+branding transition from Echo Install to MAD Installer.
