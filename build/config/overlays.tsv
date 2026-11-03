@@ -13,8 +13,8 @@ echo-boot	config/icons	icons
 echo-boot	config/refind.conf	refind.conf
 echo-boot	config/refind_x64.efi	refind_x64.efi
 echo-boot	config/airootfs	airootfs
-echo-desktop	config/airootfs	airootfs
-echo-desktop	config/live	airootfs
+ash-desktop	config/airootfs	airootfs
+ash-desktop	config/live	airootfs
 mad-install	calamares	airootfs/etc/calamares
 mad-install	config/live	airootfs/etc
 mad-install	config/home	airootfs/home

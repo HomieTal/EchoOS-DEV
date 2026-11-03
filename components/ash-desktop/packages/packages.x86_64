@@ -1,0 +1,20 @@
+# Ash Desktop: the default ArchISO GNOME desktop environment.
+#
+# Mirrors the desktop layer of the official Arch Linux GNOME ISO:
+# the GNOME group (gnome-shell, GDM, GNOME Control Center, core GNOME
+# apps), GVfs, PipeWire audio, and xorg-xhost for the MAD Installer
+# launcher's Xwayland display grant. No XFCE, KDE/Plasma, or LightDM
+# packages.
+accountsservice
+gdm
+gnome
+gvfs
+pavucontrol
+pipewire
+pipewire-alsa
+pipewire-pulse
+ttf-dejavu
+wireplumber
+xdg-user-dirs
+xdg-utils
+xorg-xhost

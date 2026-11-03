@@ -64,7 +64,12 @@ if [ -f "${ESP_IMG}" ] && [ -f "${PROFILE}/EFI/BOOT/refind.conf" ]; then
 fi
 
 # Rebuild only the xorriso stage so the patched ESP lands in the ISO.
-if [ -f "${SCRIPT_DIR}/work/build._build_buildmode_iso" ]; then
-    sudo rm -f "${SCRIPT_DIR}/work/build._build_buildmode_iso"
+# mkarchiso's _run_once markers gate every stage: the xorriso pass is
+# "iso._build_iso_image" (run_once_mode = buildmode), and the buildmode
+# entry itself is "build._build_buildmode_iso". Both must be cleared —
+# clearing only the latter re-enters _build_buildmode_iso but still
+# skips xorriso, and the patched ESP never reaches the ISO.
+if [ -f "${SCRIPT_DIR}/work/build._build_buildmode_iso" ] || [ -f "${SCRIPT_DIR}/work/iso._build_iso_image" ]; then
+    sudo rm -f "${SCRIPT_DIR}"/work/build.* "${SCRIPT_DIR}"/work/iso.* 2>/dev/null || true
     run_mkarchiso
 fi

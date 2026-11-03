@@ -1,0 +1,13 @@
+# Live-only AccountsService record for the archiso user.
+#
+# GDM reads the preferred session from AccountsService when it starts the
+# AutomaticLogin session; "ash" selects the Ash Desktop session
+# (/usr/share/wayland-sessions/ash.desktop). Without this, GDM would fall
+# back to the stock "gnome" session name on the login screen.
+#
+# This file is excluded from the installed target by the MAD Installer
+# unpackfs exclude list; the target's AccountsService records are created
+# by the installer from the user's choices.
+[User]
+Session=ash
+SystemAccount=false

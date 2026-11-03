@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Ash Desktop
+Comment=The Ash Desktop session (GNOME technology base)
+Exec=gnome-session
+TryExec=gnome-session
+DesktopNames=GNOME;Ash

@@ -1,5 +1,4 @@
 accountsservice
-adwaita-icon-theme
 alsa-utils
 amd-ucode
 arch-install-scripts
@@ -32,7 +31,9 @@ f2fs-tools
 fatresize
 foot-terminfo
 fsarchiver
+gdm
 ghostty-terminfo
+gnome
 gpart
 gpm
 gptfdisk
@@ -57,9 +58,6 @@ less
 lftp
 libfido2
 libusb-compat
-lightdm
-lightdm-gtk-greeter
-lightdm-gtk-greeter-settings
 linux
 linux-atm
 linux-firmware
@@ -142,12 +140,7 @@ wpa_supplicant
 wvdial
 xdg-user-dirs
 xdg-utils
-xfce4
-xfce4-goodies
 xfsprogs
 xl2tpd
-xorg-server
-xorg-setxkbmap
 xorg-xhost
-xorg-xkbcomp
 zsh

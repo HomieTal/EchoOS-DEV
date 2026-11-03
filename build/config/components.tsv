@@ -1,5 +1,5 @@
 order	component	root	requires
 10	echo-core	components/echo-core	-
 20	echo-boot	components/echo-boot	echo-core
-30	echo-desktop	components/echo-desktop	echo-core
-40	mad-install	components/mad-install	echo-core,echo-boot,echo-desktop
+30	ash-desktop	components/ash-desktop	echo-core
+40	mad-install	components/mad-install	echo-core,echo-boot,ash-desktop

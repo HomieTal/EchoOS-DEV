@@ -2,9 +2,10 @@
 /etc/pacman.d/hooks/
 /etc/ssh/sshd_config.d/10-archiso.conf
 /etc/sudoers.d/archiso
-/etc/lightdm/lightdm.conf.d/
+/etc/gdm/custom.conf
 /etc/systemd/system/getty@tty1.service.d/autologin.conf
 /etc/systemd/system/display-manager.service
+/var/lib/AccountsService/users/archiso
 /etc/systemd/system/choose-mirror.service
 /etc/systemd/system/pacman-init.service
 /etc/systemd/system/livecd-alsa-unmuter.service

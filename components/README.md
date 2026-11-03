@@ -11,7 +11,7 @@ profile in `build/generated/profile` is the input to `mkarchiso`. The legacy
 | --- | --- | ---: |
 | `echo-core` | Base system, kernel/firmware, initramfs tooling, filesystems, networking, services, live account and rescue tooling | 10 |
 | `echo-boot` | Live boot menus, rEFInd/EFI assets, Syslinux, live initramfs config and boot packages | 20 |
-| `echo-desktop` | XFCE 4, LightDM, Echo theme, wallpaper, desktop apps, live autologin | 30 |
+| `ash-desktop` | Ash Desktop session (GNOME technology base), GDM, Echo theme, wallpaper, desktop apps, live autologin | 30 |
 | `mad-install` | MAD Installer (Calamares), branding, live installer launcher, installed-system service and boot policy | 40 |
 | Shared build infrastructure | ArchISO profile definition, pacman config, package-list assembly, local repository, build/validation scripts | n/a |
 
@@ -21,8 +21,8 @@ as a reference for the MAD Installer fork; it is not assembled or validated.
 ## Dependencies
 
 - `echo-core` is the base layer and has no component dependency.
-- `echo-boot`, `echo-desktop`, and `mad-install` depend on `echo-core`.
-- `mad-install` also depends on `echo-boot` and `echo-desktop`.
+- `echo-boot`, `ash-desktop`, and `mad-install` depend on `echo-core`.
+- `mad-install` also depends on `echo-boot` and `ash-desktop`.
 - Dependencies must be ordered before their dependants in
   `build/config/components.tsv`; the assembler and validator enforce this.
 
@@ -40,7 +40,7 @@ as a reference for the MAD Installer fork; it is not assembled or validated.
 5. The Calamares `unpackfs` exclude list is the authoritative live/target
    boundary. Placing a file in a `live/` overlay does not automatically exclude
    it from the installed target.
-6. Desktop packages and configuration belong only to `echo-desktop`. Core,
+6. Desktop packages and configuration belong only to `ash-desktop`. Core,
    Boot, and Install must not declare or configure a desktop session.
 
 ## Component layout
@@ -89,7 +89,7 @@ used during the migration:
 ## Validation
 
 Run `./build/validate.sh`. It checks component structure, order, dependencies,
-overlay safety, package ownership and duplicates, the XFCE/LightDM desktop
+overlay safety, package ownership and duplicates, the GNOME/GDM desktop
 contract, the MAD Installer contract, the live/target boundary, and assembly
 for both architectures. A passing run prints `ECHO OS VALIDATION: PASSED`.
 

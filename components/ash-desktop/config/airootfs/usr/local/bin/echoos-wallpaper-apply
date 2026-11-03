@@ -1,0 +1,33 @@
+#!/bin/sh
+# Echo OS wallpaper enforcement.
+#
+# GNOME reads the desktop background from the user dconf database
+# (org.gnome.desktop.background). A system-wide dconf default would need
+# "dconf update" to be run at image build time, which the assembly has
+# no hook for, so this autostart script sets the keys in the user
+# database of whatever GNOME session starts: the live user and any user
+# on an installed system alike.
+#
+# Both the light and dark style keys are set, plus picture-options, so
+# the Echo OS wallpaper shows regardless of the color-scheme preference.
+WALLPAPER=/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png
+
+[ -f "$WALLPAPER" ] || exit 0
+
+command -v gsettings >/dev/null 2>&1 || exit 0
+
+# wait up to 30 s for the session dconf to be writable
+i=0
+while [ "$i" -lt 60 ]; do
+    if gsettings get org.gnome.desktop.background picture-uri >/dev/null 2>&1; then
+        break
+    fi
+    i=$((i + 1))
+    sleep 0.5
+done
+
+gsettings set org.gnome.desktop.background picture-uri "file://$WALLPAPER" 2>/dev/null || true
+gsettings set org.gnome.desktop.background picture-uri-dark "file://$WALLPAPER" 2>/dev/null || true
+gsettings set org.gnome.desktop.background picture-options 'zoom' 2>/dev/null || true
+
+exit 0

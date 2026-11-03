@@ -26,3 +26,6 @@ __pycache__/
 /tmp/
 /var/tmp/
 backups/
+
+# ZCode local workspace
+/.zcode/

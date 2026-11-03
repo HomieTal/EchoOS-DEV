@@ -1,14 +1,14 @@
 # Echo OS
 
-An Arch Linux–based live system with an XFCE desktop and the **MAD Installer**
+An Arch Linux–based live system with the **Ash Desktop** (GNOME technology base) and the **MAD Installer**
 (Calamares), built from independently maintained components.
 
-Version 4.0 (Fox) — image `2026.10.31`.
+Version 4.1 — image `2026.10.31`.
 
 ## Overview
 
-- **Live environment**: XFCE 4 (the ArchISO XFCE baseline), autologged in as
-  the `archiso` user through LightDM.
+- **Live environment**: the Ash Desktop session, autologged in as
+  the `archiso` user through GDM.
 - **Installer**: **MAD Installer**, a Calamares frontend with Echo OS branding.
   It is launched from the "MAD Installer" desktop shortcut and autostarts once
   in the live session.
@@ -25,7 +25,7 @@ Version 4.0 (Fox) — image `2026.10.31`.
 | --- | --- |
 | `components/echo-core` | kernel, firmware, base system, services, networking, live account |
 | `components/echo-boot` | rEFInd, EFI payloads, boot menus, live initramfs config |
-| `components/echo-desktop` | XFCE, LightDM, session/branding defaults, wallpapers, desktop apps |
+| `components/ash-desktop` | Ash Desktop: branded session, GDM, session/branding defaults, wallpapers, desktop apps |
 | `components/mad-install` | MAD Installer (Calamares), modules, installer autostart/shortcut, target boot policy |
 | `build/` | assembly, shared templates, package merging, validation |
 
@@ -58,15 +58,15 @@ existing ISO).
 ## Installation
 
 1. Boot the ISO in UEFI mode.
-2. In the XFCE live session, use the **MAD Installer** desktop shortcut (the
+2. In the GNOME live session, use the **MAD Installer** desktop shortcut (the
    installer also autostarts once).
 3. Follow the wizard (locale, keyboard, partitioning, user creation).
-4. Reboot into the installed system (LightDM login, XFCE session).
+4. Reboot into the installed system (GDM login, Ash Desktop session).
 
 ## Notes
 
 - MAD Installer carries the Echo OS installer branding; the desktop uses the
-  Echo wallpaper, mark, and LightDM greeter branding.
+  Echo wallpaper, mark, and session branding.
 - The live user is removed from the installed target; the account you create
   during installation is the only user.
 - The target's pacman package databases are refreshed during first boot / via

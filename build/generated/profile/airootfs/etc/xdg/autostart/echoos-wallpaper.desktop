@@ -2,8 +2,8 @@
 Type=Application
 Version=1.0
 Name=Echo OS Wallpaper
-Comment=Apply the Echo OS default wallpaper to every monitor
+Comment=Apply the Echo OS default wallpaper to the GNOME session
 Exec=/usr/local/bin/echoos-wallpaper-apply
-OnlyShowIn=XFCE;
+OnlyShowIn=GNOME;Ash;
 X-GNOME-Autostart-enabled=true
 NoDisplay=true
