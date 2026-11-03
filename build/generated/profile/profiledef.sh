@@ -5,9 +5,20 @@ iso_name="echoos-fox"
 iso_label="ECHO_FOX_$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m)"
 iso_publisher="Echo OS (Arch Linux based)"
 iso_application="Echo OS x86_64 Live/Rescue DVD"
-iso_version="$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
+iso_version="4.2.0"
 install_dir="arch"
-bootmodes=('uefi.systemd-boot')
+# Universal boot compatibility: one hybrid ISO with two independent paths.
+#   * BIOS  (legacy laptops, SeaBIOS/VMware BIOS/VirtualBox): syslinux —
+#     El Torito boot entry AND isohdpfx MBR boot code for USB boots.
+#   * UEFI  (modern laptops, OVMF/VMware EFI): systemd-boot El Torito,
+#     with rEFInsupport files patched into the ESP by build.sh afterwards.
+# syslinux is x86-only: on aarch64 the profile stays UEFI-only (syslinux
+# does not exist there and aarch64 laptops are UEFI).
+if [ "$(uname -m)" = "x86_64" ]; then
+    bootmodes=('bios.syslinux' 'uefi.systemd-boot')
+else
+    bootmodes=('uefi.systemd-boot')
+fi
 pacman_conf="pacman.conf"
 airootfs_image_type="squashfs"
 airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86,arm64' '-b' '1M' '-Xdict-size' '1M' '-processors' '4')

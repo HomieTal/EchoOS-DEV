@@ -3,7 +3,7 @@
 ## 1. System position
 
 ```
-Echo Boot          Echo Core            Echo Desktop        MAD Installer
+Echo Boot          SPD Core             Ash Desktop         MAD Installer
 (live boot,        (live root, base     (Plasma/SDDM/       (installer UI,
  rEFInd media)      system)              theme)              install engine)
       └──────────────────┴──────────────────────┴───────────────┬─┘

@@ -126,7 +126,7 @@ list, and the installer will not start without those KF6 libraries.
 
 ## Dependencies
 
-- **Echo Core:** live root, base system, users, filesystem utilities.
+- **SPD Core (echo-core):** live root, base system, users, filesystem utilities.
 - **Echo Boot:** live rEFInd assets and the installed `refind` package.
 - **Echo Desktop:** SDDM, Plasma Wayland session, and Echo theme referenced by
   `displaymanager.conf`.

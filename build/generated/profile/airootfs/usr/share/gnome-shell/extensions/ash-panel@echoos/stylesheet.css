@@ -1,0 +1,19 @@
+/*
+ * Ash Panel — Echo OS top panel background.
+ *
+ * Overrides only #panel's own background: the stock theme paints it solid
+ * black. Background alpha never reaches the panel contents (buttons, icons,
+ * text, indicators) because they are separate child actors with their own
+ * styles. The panel is pinned and full-width, so radius stays 0.
+ */
+#panel.ash-panel {
+  background-color: rgba(20, 20, 24, 0.70);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0px;
+}
+
+/* Slightly more opaque while a maximized window is focused, to keep
+ * contrast where the wallpaper is hidden behind window chrome. */
+#panel.ash-panel.ash-panel-maximized {
+  background-color: rgba(20, 20, 24, 0.80);
+}

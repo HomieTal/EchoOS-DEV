@@ -19,6 +19,9 @@ assets, and boot packages. Installed-system bootloader policy belongs to
 - **Kernel/initramfs config:** ArchISO mkinitcpio drop-in
   (`/etc/mkinitcpio.conf.d/archiso.conf`).
 - **Boot artwork:** rEFInd icons and fonts, Syslinux splash.
+- **Boot theme:** the `EFI/BOOT/themes/wolfe/` rEFInd theme (Wolfe
+  adaptation, MIT — see that directory's README.md and LICENSE), applied by
+  every shipped rEFInd configuration via `include themes/wolfe/theme.conf`.
 - **Boot-related packages:** Declared in `packages/packages.x86_64` and
   `packages/packages.aarch64`.
 
@@ -30,6 +33,7 @@ that is the Calamares `refindboot` module in Echo Install.
 
 ```text
 config/EFI/                    EFI assets as staged for the ISO
+config/EFI/BOOT/themes/wolfe/  rEFInd boot theme (Wolfe adaptation)
 config/efi/                    rEFInd loader fallback tree
 config/boot/                   rEFInd loader, config, and bootmount helper
 config/efiboot/loader/         ArchISO UEFI loader entries
@@ -42,6 +46,21 @@ config/grub/                   retained inactive GRUB assets
 config/initramfs/archiso.conf  ArchISO mkinitcpio drop-in
 config/airootfs/               boot payload delivered into the live root
 ```
+
+## Boot theme
+
+`config/EFI/BOOT/themes/wolfe/` is the Wolfe rEFInd theme adapted for
+Echo OS (MIT license preserved in its `LICENSE`). `refind.conf` includes
+`themes/wolfe/theme.conf`; directives after the include override theme
+defaults (`showtools` re-adds `firmware`). Icons missing from the theme
+set fall back to the standard `EFI/BOOT/icons/` directory.
+
+Per-release assets (animal artwork, background, wordmark, accent colour,
+release name) live in `themes/wolfe/release/` and are the only things that
+change between animal releases; see `themes/wolfe/release/release.conf`.
+`build.sh` syncs `themes/` into both the ISO 9660 `EFI/BOOT` tree and the
+ESP image (`efiboot.img`) together with `refind.conf`, `echoos.conf`,
+`fonts/` and `icons/`.
 
 ## Overlays
 
@@ -68,17 +87,36 @@ Installer (40).
 
 ## Boot modes
 
-`build/template/profiledef.sh` still selects:
+`build/template/profiledef.sh` selects both boot paths for x86_64 builds
+(and UEFI only on aarch64, where syslinux does not exist):
 
-```text
-bootmodes=('bios.syslinux'
-           'uefi.systemd-boot')
+```bash
+if [ "$(uname -m)" = "x86_64" ]; then
+    bootmodes=('bios.syslinux' 'uefi.systemd-boot')
+else
+    bootmodes=('uefi.systemd-boot')
+fi
 ```
 
 `uefi.systemd-boot` is the ArchISO staging mechanism. Echo OS replaces the
 staged loader with rEFInd; the boot mode name is not a statement that
 systemd-boot is the visible menu. BIOS remains Syslinux. rEFInd is not an
 ArchISO boot mode.
+
+### Legacy BIOS path (universal boot compatibility)
+
+`config/syslinux/` is overlaid to `syslinux/` in the assembled profile and
+mkarchiso's `bios.syslinux` mode produces, in one hybrid ISO:
+
+- an El Torito **BIOS boot catalog entry** (`isolinux.bin`), and
+- **isohdpfx MBR boot code** so BIOS USB boots work on the same image.
+
+`syslinux.cfg` / `archiso_*.cfg` are Echo OS branded ("Echo OS install
+medium (x86_64, BIOS)", `MENU TITLE Echo OS`); `splash.png` is the Echo OS
+branded menu background. The kernel/initramfs paths, `%INSTALL_DIR%`,
+`%ARCHISO_UUID%` and `%KERNEL_PARAMS%` templating are the stock archiso
+contract and are rendered by mkarchiso. The BIOS path launches the same
+live system as the UEFI path; it depends on no EFI executable.
 
 `build.sh` refreshes `work/iso/EFI/BOOT/refind.conf` from the assembled profile
 when a staging tree already exists, because mkarchiso does not process
@@ -112,7 +150,7 @@ declared by Core.
 
 ## Dependencies
 
-- **Echo Core:** Boot consumes the kernel, firmware, initramfs tooling, and
+- **SPD Core (echo-core):** Boot consumes the kernel, firmware, initramfs tooling, and
   live root. Core owns the `mkinitcpio-archiso` package.
 - **Echo Install:** The installed-system bootloader is written by Calamares
   (`shellprocess-refindboot.conf` and `echoos-refindconf-write`). Echo Boot

@@ -1,14 +1,25 @@
-# echo-core
+# SPD Core
 
-Status: **Active.** Echo Core is a real assembly component. Its payloads are
+Status: **Active.** SPD Core is a real assembly component. Its payloads are
 merged into `build/generated/profile` by `build/assemble.sh`, and it is the base
 layer that every other component may depend on.
 
-Echo Core owns the non-graphical system: kernel, firmware, initramfs tooling,
+SPD Core owns the non-graphical system: kernel, firmware, initramfs tooling,
 filesystem and networking utilities, base services, hardware support, the live
 account, and live infrastructure. The graphical session belongs to
-`echo-desktop`; boot menus belong to `echo-boot`; the installer belongs to
-`echo-install`.
+`ash-desktop`; boot menus belong to `echo-boot`; the installer belongs to
+`mad-install`.
+
+## Identity
+
+- Distribution name: **Echo OS** (`/etc/os-release`, unchanged).
+- Core subsystem name: **SPD Core**.
+- Terminal hostname (live environment and default for installed systems): **`spd`**
+  (`airootfs/etc/hostname`, `airootfs/etc/hosts`, installer `users.conf`).
+
+The component directory and manifest id remain `echo-core` for compatibility
+with `build/config/components.tsv`, the overlay maps, and the validation
+tooling; only the display identity is SPD Core.
 
 ## Responsibilities
 

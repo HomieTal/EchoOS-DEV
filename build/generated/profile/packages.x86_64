@@ -118,6 +118,7 @@ smartmontools
 sof-firmware
 squashfs-tools
 sudo
+syslinux
 systemd-resolvconf
 tcpdump
 terminus-font

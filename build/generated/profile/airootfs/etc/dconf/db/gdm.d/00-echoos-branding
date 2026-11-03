@@ -1,0 +1,32 @@
+#
+# GDM greeter defaults (system-wide dconf defaults, profile "gdm").
+#
+# The greeter session reads its dconf through the profile in
+# /etc/dconf/profile/gdm (user-db, this system db, then the package
+# defaults). The wallpaper file is world-readable under /usr/share, so the
+# greeter can load it.
+#
+# The lock screen of user sessions is a separate concern and is set per
+# user by /usr/local/bin/echoos-wallpaper-apply.
+#
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/wallpapers/EchoOS/contents/images/1920x1080.png'
+picture-uri-dark='file:///usr/share/wallpapers/EchoOS/contents/images/1920x1080.png'
+picture-options='zoom'
+
+# The login screen is a lock-screen variant: were the greeter to draw a
+# wallpaper (GNOME 49+ greeters draw a styled dialog without one), it would
+# come from these keys, so they point at the Echo OS lock-screen artwork.
+# Without them a future greeter would show the shell's built-in dark
+# fallback instead of Echo OS branding.
+[org/gnome/desktop/screensaver]
+picture-uri='file:///usr/share/wallpapers/EchoOS-Lock/contents/images/1600x900.png'
+picture-uri-dark='file:///usr/share/wallpapers/EchoOS-Lock/contents/images/1600x900.png'
+picture-options='zoom'
+
+# Upstream Arch ships the "Arch Linux" logo on the login screen by patching
+# the schema default of this key to
+# /usr/share/pixmaps/archlinux-logo-text-dark.svg. Empty the default to
+# remove it; the Echo OS wallpaper carries the login screen branding.
+[org/gnome/login-screen]
+logo=''

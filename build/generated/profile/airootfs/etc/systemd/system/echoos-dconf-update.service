@@ -1,0 +1,19 @@
+[Unit]
+Description=Compile Echo OS system dconf databases
+# The Ash Desktop dconf defaults (/etc/dconf/db/local.d, /etc/dconf/db/gdm.d)
+# are overlaid into the image as plain text keyfiles; dconf clients only read
+# the compiled binary database. The assembly has no image-build hook for
+# "dconf update", so compile once per boot, before GDM and user sessions read
+# the defaults. Idempotent and near-instant.
+ConditionPathExists=/etc/dconf/db/local.d
+After=local-fs.target
+Before=gdm.service
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/dconf update
+RemainAfterExit=yes
+
+[Install]
+WantedBy=sysinit.target

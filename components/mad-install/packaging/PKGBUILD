@@ -79,6 +79,16 @@ package() {
                  "$d/usr/share/applications/mad-installer.desktop"
   install -Dm644 "$_pkgsrc/config/rootfs/usr/share/icons/hicolor/64x64/apps/mad-installer.png" \
                  "$d/usr/share/icons/hicolor/64x64/apps/mad-installer.png"
+  # Echo-branded replacement for the upstream "calamares" icon name: the
+  # running Calamares window is attributed to the upstream
+  # /usr/share/applications/calamares.desktop (Icon=calamares), so without
+  # these the dash and app grid show the stock orange Calamares artwork.
+  # Raster sizes shadow the upstream scalable SVG; the scalable path itself
+  # is package-owned and must not be overlaid (pacstrap conflict).
+  for size in 16x16 24x24 32x32 48x48 64x64 96x96 128x128 256x256; do
+    install -Dm644 "$_pkgsrc/config/rootfs/usr/share/icons/hicolor/$size/apps/calamares.png" \
+                   "$d/usr/share/icons/hicolor/$size/apps/calamares.png"
+  done
 
   # --- Documentation --------------------------------------------------------
   for doc in README.md ARCHITECTURE.md DEPENDENCIES.md ROADMAP.md TESTING.md \

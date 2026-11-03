@@ -267,7 +267,10 @@ for arch in x86_64 aarch64; do
              airootfs/etc/calamares/modules/displaymanager.conf \
              airootfs/usr/share/wayland-sessions/ash.desktop \
              airootfs/var/lib/AccountsService/users/archiso \
-             airootfs/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png; do
+             airootfs/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png \
+             syslinux/syslinux.cfg \
+             syslinux/archiso_sys-linux.cfg \
+             syslinux/splash.png; do
       [[ -e "$out/$f" || -L "$out/$f" ]] || bad "assembled profile is missing $f"
     done
     [[ -x "$out/airootfs/usr/local/bin/echoos-wallpaper-apply" ]] \
@@ -313,16 +316,9 @@ removed = {
     'airootfs/home/archiso/Desktop/echoos-install.desktop',
     'airootfs/usr/local/bin/echoos-install-launcher',
     'airootfs/usr/local/sbin/echoos-refindconf-write',
-    # MAD Installer: the Arch-branded syslinux BIOS boot path was removed
-    # from the profile — the live medium boots via rEFInd (UEFI) only.
-    'syslinux/archiso_head.cfg',
-    'syslinux/archiso_pxe-linux.cfg',
-    'syslinux/archiso_pxe.cfg',
-    'syslinux/archiso_sys-linux.cfg',
-    'syslinux/archiso_sys.cfg',
-    'syslinux/archiso_tail.cfg',
-    'syslinux/splash.png',
-    'syslinux/syslinux.cfg',
+    # Universal boot compatibility (SPD Core rebrand + hybrid ISO): the
+    # syslinux BIOS boot path was restored from the echo-boot component
+    # with Echo OS branding, so the legacy snapshot paths are built again.
     # GNOME migration: the legacy LightDM configuration files were replaced
     # by the GDM configuration of the ash-desktop component.
     'airootfs/etc/lightdm/lightdm.conf',
@@ -365,9 +361,40 @@ expected_extra = {
     'airootfs/usr/share/libalpm/hooks/mad-refind-sync.hook',
     'airootfs/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png',
     'airootfs/usr/share/wallpapers/EchoOS/metadata.json',
+    # Ash Desktop branding (wallpaper/panel/lock-screen/GDM greeter):
+    'airootfs/usr/share/wallpapers/EchoOS-Lock/metadata.json',
+    'airootfs/usr/share/wallpapers/EchoOS-Lock/contents/images/1600x900.png',
+    'airootfs/etc/dconf/profile/user',
+    'airootfs/etc/dconf/profile/gdm',
+    'airootfs/etc/dconf/db/local.d/00-ash-shell',
+    'airootfs/etc/dconf/db/gdm.d/00-echoos-branding',
+    'airootfs/etc/systemd/system/echoos-dconf-update.service',
+    'airootfs/etc/systemd/system/sysinit.target.wants/echoos-dconf-update.service',
+    'airootfs/usr/share/gnome-shell/extensions/ash-panel@echoos/metadata.json',
+    'airootfs/usr/share/gnome-shell/extensions/ash-panel@echoos/extension.js',
+    'airootfs/usr/share/gnome-shell/extensions/ash-panel@echoos/stylesheet.css',
+    # MAD Installer dash icon set (Echo mark under the upstream
+    # "calamares" icon name):
+    'airootfs/usr/share/icons/hicolor/64x64/apps/calamares.png',
+    'airootfs/usr/share/icons/hicolor/16x16/apps/calamares.png',
+    'airootfs/usr/share/icons/hicolor/24x24/apps/calamares.png',
+    'airootfs/usr/share/icons/hicolor/32x32/apps/calamares.png',
+    'airootfs/usr/share/icons/hicolor/48x48/apps/calamares.png',
+    'airootfs/usr/share/icons/hicolor/96x96/apps/calamares.png',
+    'airootfs/usr/share/icons/hicolor/128x128/apps/calamares.png',
+    'airootfs/usr/share/icons/hicolor/256x256/apps/calamares.png',
+    # SPD Core identity (the legacy snapshot ships no /etc/hosts):
+    'airootfs/etc/hosts',
 }
 missing = sorted((legacy - removed) - built)
-extra = sorted(built - legacy)
+# The boot theme subtree (echo-boot config/EFI/BOOT/themes/wolfe) is a
+# deliberate addition over the legacy tree: the theme itself, the
+# per-release assets under release/, and future release asset changes
+# are all allowed there without touching this list.
+extra = sorted(
+    p for p in (built - legacy)
+    if not p.startswith('EFI/BOOT/themes/wolfe/')
+)
 if missing:
     print('MISSING ' + ','.join(missing))
 if extra != sorted(expected_extra):
@@ -390,8 +417,22 @@ for p in /etc/gdm/custom.conf /usr/share/echoos/echo-mark.png \
   grep -Fq "[\"$p\"]" "$pd" || bad "profiledef.sh has no permission entry for $p"
 done
 if grep -Eq '/etc/(sddm|lightdm)|xfce4' "$pd"; then bad "profiledef.sh still has SDDM/LightDM/XFCE permission entries"; fi
-if grep -Fq "bios.syslinux" "$pd"; then bad "profiledef.sh still has the Arch syslinux BIOS bootmode"; fi
+
+# ---------------------------------------------------------------------------
+# SPD Core identity (distribution stays Echo OS)
+# ---------------------------------------------------------------------------
+core="components/echo-core"
+grep -Fxq 'spd' "$core/airootfs/etc/hostname"   || bad "live hostname is not spd"
+grep -Fq '127.0.1.1' "$core/airootfs/etc/hosts" && grep -Fq 'spd' "$core/airootfs/etc/hosts"   || bad "/etc/hosts does not resolve spd"
+grep -Fq 'SPD Core | Echo OS' "$core/live/etc/motd"   || bad "motd does not carry the SPD Core banner"
+grep -Eq '^VARIANT="SPD Core"$' "$core/airootfs/usr/share/echoos/os-release"   || bad "os-release does not declare VARIANT=SPD Core"
+grep -Eq '^NAME="Echo OS"$' "$core/airootfs/usr/share/echoos/os-release"   || bad "os-release distribution name must stay Echo OS"
+grep -Fq 'template: "spd"' components/mad-install/calamares/modules/users.conf   || bad "installer hostname template is not spd"
+ok "SPD Core identity (hostname spd, motd, os-release VARIANT)"
+# Universal boot compatibility: one hybrid ISO, two independent paths.
+grep -Fq "'bios.syslinux'" "$pd" || bad "profiledef.sh lost the bios.syslinux BIOS bootmode"
 grep -Fq "'uefi.systemd-boot'" "$pd" || bad "profiledef.sh lost uefi.systemd-boot bootmode"
+grep -Fq '"$(uname -m)" = "x86_64"' "$pd" || bad "profiledef.sh does not gate the BIOS bootmode to x86_64"
 grep -Fq 'pacman_conf="pacman.conf"' "$pd" || bad "profiledef.sh lost pacman_conf"
 
 # ---------------------------------------------------------------------------

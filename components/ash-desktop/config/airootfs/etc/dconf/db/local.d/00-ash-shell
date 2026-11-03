@@ -1,0 +1,11 @@
+#
+# Ash Desktop shell defaults (system-wide dconf defaults, profile "user").
+#
+# Enables the Ash Panel GNOME Shell extension for every Ash Desktop user
+# session: the pinned top panel with the dark translucent (glass) Echo OS
+# background. Users can still override enabled-extensions in their own
+# dconf database; this only supplies the default.
+#
+[org/gnome/shell]
+enabled-extensions=['ash-panel@echoos']
+disable-user-extensions=false

@@ -1,0 +1,7 @@
+127.0.0.1 localhost
+::1 localhost
+127.0.1.1	spd
+
+# The live environment hostname is "spd" (SPD Core | Echo OS). On installed
+# systems Calamares rewrites /etc/hostname and /etc/hosts for the hostname
+# chosen at install time (default: spd).

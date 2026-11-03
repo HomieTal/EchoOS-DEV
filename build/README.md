@@ -4,7 +4,7 @@ Shared build and assembly infrastructure for the future three-component
 Echo OS profile.
 
 Status: **Step 2.** `profile/` remains the active profile. Echo Boot payloads
-and package manifests now exist; Echo Core and Echo Install remain skeletons.
+and package manifests now exist; the core subsystem is branded SPD Core (component id `echo-core`).
 `build/generated/` is empty except for its placeholder. `assemble.sh` still
 refuses to generate because the other component inputs and shared templates are
 missing. `validate.sh` checks the Step 2 structure, Boot payload parity with the

@@ -113,7 +113,7 @@ installed system boots to the normal LightDM login screen.
 
 ## Dependencies
 
-- **Echo Core:** live root, base system, users, filesystem utilities.
+- **SPD Core (echo-core):** live root, base system, users, filesystem utilities.
 - **Echo Boot:** live rEFInd assets and the installed `refind` package.
 - **Echo Desktop:** XFCE, LightDM, and the Echo greeter/theme referenced by
   `displaymanager.conf`.

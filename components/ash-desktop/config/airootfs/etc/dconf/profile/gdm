@@ -1,0 +1,12 @@
+# GDM greeter dconf profile.
+#
+# The gdm package ships /usr/share/dconf/profile/gdm, which only reads
+# user-db:user and the compiled package defaults file — it does NOT declare
+# a system db, so keyfiles under /etc/dconf/db/gdm.d/ would never be read.
+# This override (in /etc, which dconf reads before /usr/share) declares the
+# "gdm" system db first and keeps the package defaults as a fallback, so the
+# Echo OS branding keyfiles in /etc/dconf/db/gdm.d/ apply to the login
+# screen. Nothing here is package-owned; no pacstrap conflict.
+user-db:user
+system-db:gdm
+file-db:/usr/share/gdm/greeter-dconf-defaults

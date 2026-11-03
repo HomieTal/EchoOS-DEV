@@ -17,7 +17,7 @@
 #                        pixels are untouched. Geometry is identical.
 #
 # Product strings intentionally follow /usr/share/echoos/os-release
-# (PRETTY_NAME="Echo OS 2.0 (Fox)", VERSION_ID="2.0") instead of a
+# (PRETTY_NAME="Echo OS 4.2.0 (Fox)", VERSION_ID="4.2.0") instead of a
 # hardcoded ISO date, so they cannot drift across releases.
 #
 # Style tokens (see docs/DESIGN-TOKENS.md):
@@ -58,10 +58,10 @@ navigation:         widget
 strings:
     productName:         "Echo OS"
     shortProductName:    "Echo OS"
-    version:             "2.0"
-    shortVersion:        "2.0"
-    versionedName:       "Echo OS 2.0 (Fox)"
-    shortVersionedName:  "Echo OS 2.0"
+    version:             "4.2.0"
+    shortVersion:        "4.2.0"
+    versionedName:       "Echo OS 4.2.0 (Fox)"
+    shortVersionedName:  "Echo OS 4.2.0"
     bootloaderEntryName: "EchoOS"
     supportUrl:          ""
     knownIssuesUrl:      ""

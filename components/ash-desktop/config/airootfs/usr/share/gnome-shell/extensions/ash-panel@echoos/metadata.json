@@ -1,0 +1,8 @@
+{
+  "uuid": "ash-panel@echoos",
+  "name": "Ash Panel",
+  "description": "Ash Desktop top panel: pinned full-width top panel with the Echo OS dark translucent (glass) background — rgba(20, 20, 24, 70%) with a subtle white bottom border, slightly more opaque while a maximized window is focused. Contents (icons, text, indicators) stay fully opaque. Only the desktop panel is styled; the lock screen and the GDM greeter are not.",
+  "shell-version": ["45", "46", "47", "48", "49", "50", "51"],
+  "session-modes": ["user"],
+  "url": "https://github.com/HomieTal/EchoOS-DEV"
+}

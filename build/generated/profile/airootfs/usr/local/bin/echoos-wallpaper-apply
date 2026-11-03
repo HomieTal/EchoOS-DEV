@@ -1,18 +1,31 @@
 #!/bin/sh
 # Echo OS wallpaper enforcement.
 #
-# GNOME reads the desktop background from the user dconf database
-# (org.gnome.desktop.background). A system-wide dconf default would need
-# "dconf update" to be run at image build time, which the assembly has
-# no hook for, so this autostart script sets the keys in the user
-# database of whatever GNOME session starts: the live user and any user
-# on an installed system alike.
+# GNOME reads the desktop background and the lock screen background from the
+# user dconf database (org.gnome.desktop.background and
+# org.gnome.desktop.screensaver). A system-wide dconf default would need
+# "dconf update" to be run at image build time, which the assembly has no
+# hook for, so this autostart script sets the keys in the user database of
+# whatever GNOME session starts: the live user and any user on an installed
+# system alike.
 #
-# Both the light and dark style keys are set, plus picture-options, so
-# the Echo OS wallpaper shows regardless of the color-scheme preference.
+# Two independent assets are applied, each with its light and dark style
+# key plus picture-options, so both surfaces are branded regardless of the
+# color-scheme preference:
+#   * desktop background  — the Echo OS wallpaper
+#   * lock screen         — the Echo OS lock-screen artwork
+#     (GNOME 49+ dropped the screensaver picture-uri-dark key; setting it
+#     is a harmless no-op there, older shells pick it up)
+#
+# The GDM login screen is a separate concern: it is branded by
+# /etc/dconf/db/gdm.d/ (compiled by echoos-dconf-update.service); note the
+# GNOME 49+ greeter draws a styled login dialog without a wallpaper, so the
+# gdm.d keyfile clears the upstream Arch logo instead.
 WALLPAPER=/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png
+LOCKWALLPAPER=/usr/share/wallpapers/EchoOS-Lock/contents/images/1600x900.png
 
 [ -f "$WALLPAPER" ] || exit 0
+[ -f "$LOCKWALLPAPER" ] || LOCKWALLPAPER=$WALLPAPER
 
 command -v gsettings >/dev/null 2>&1 || exit 0
 
@@ -29,5 +42,10 @@ done
 gsettings set org.gnome.desktop.background picture-uri "file://$WALLPAPER" 2>/dev/null || true
 gsettings set org.gnome.desktop.background picture-uri-dark "file://$WALLPAPER" 2>/dev/null || true
 gsettings set org.gnome.desktop.background picture-options 'zoom' 2>/dev/null || true
+
+# Lock screen background (separate keys from the desktop background).
+gsettings set org.gnome.desktop.screensaver picture-uri "file://$LOCKWALLPAPER" 2>/dev/null || true
+gsettings set org.gnome.desktop.screensaver picture-uri-dark "file://$LOCKWALLPAPER" 2>/dev/null || true
+gsettings set org.gnome.desktop.screensaver picture-options 'zoom' 2>/dev/null || true
 
 exit 0

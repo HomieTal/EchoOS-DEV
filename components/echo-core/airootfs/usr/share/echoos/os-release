@@ -1,10 +1,12 @@
 NAME="Echo OS"
-PRETTY_NAME="Echo OS 4.0 (Fox)"
+PRETTY_NAME="Echo OS 4.2.0 (Fox)"
 ID=echoos
 ID_LIKE=arch
 BUILD_ID=rolling
-VERSION_ID="4.0"
-VERSION="4.0 (Fox)"
+VERSION_ID="4.2.0"
+VERSION="4.2.0 (Fox)"
+VARIANT="SPD Core"
+VARIANT_ID=spd
 ANSI_COLOR="38;2;76;194;177"
 HOME_URL="https://homietal.github.io/Echo/"
 DOCUMENTATION_URL="https://homietal.github.io/Echo/"

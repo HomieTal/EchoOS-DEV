@@ -67,11 +67,73 @@ desktop files remain installed but Ash Desktop is the default entry point.
 `OnlyShowIn=GNOME;Ash;`) applies the Echo OS wallpaper to every Ash
 Desktop session by setting `org.gnome.desktop.background picture-uri` and
 `picture-uri-dark` with `gsettings`, so first login lands on a branded
-desktop on both the live medium and installed systems.
+desktop on both the live medium and installed systems. The same script
+also sets `org.gnome.desktop.screensaver picture-uri`/`picture-uri-dark`,
+which is what the GNOME **lock screen** draws — without those keys the
+lock screen falls back to the shell's built-in (Arch) background.
 
 ## Wallpaper
 
-`config/airootfs/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png`
-is the default Echo OS wallpaper (a blue geometric artwork). It is applied to
-every Ash Desktop session — live and installed users alike — by the wallpaper
-autostart described above. It carries no third-party content.
+Two Echo OS wallpaper assets ship in this component, neither carrying
+third-party content:
+
+- `config/airootfs/usr/share/wallpapers/EchoOS/contents/images/1920x1080.png` —
+  the desktop wallpaper (blue geometric artwork);
+- `config/airootfs/usr/share/wallpapers/EchoOS-Lock/contents/images/1600x900.png` —
+  the default lock-screen artwork.
+
+The three wallpaper surfaces are configured independently:
+
+| Surface | Mechanism |
+| --- | --- |
+| Desktop background | per-session `gsettings` (autostart script, above) |
+| Lock screen | per-session `gsettings`, `org.gnome.desktop.screensaver`, → EchoOS-Lock artwork (same script) |
+| GDM login screen | system dconf defaults for the greeter, `etc/dconf/db/gdm.d/00-echoos-branding` + `etc/dconf/profile/gdm` |
+
+The GDM greeter reads its dconf through the `gdm` profile. The gdm package
+ships `/usr/share/dconf/profile/gdm` without a system db, so this component
+overrides the profile in `/etc/dconf/profile/gdm` (dconf reads `/etc`
+before `/usr/share`; nothing package-owned is touched) to declare
+`system-db:gdm`, then brands it via `gdm.d`. On GNOME 49+ the greeter draws
+a styled login dialog without a wallpaper, so the keyfile instead clears
+`org.gnome.login-screen logo` — removing the upstream Arch logo that Arch
+bakes into the compiled schema defaults — and pre-seeds the background and
+screensaver keys with the Echo assets should a greeter ever draw them.
+
+## Ash Panel (top panel)
+
+`config/airootfs/usr/share/gnome-shell/extensions/ash-panel@echoos/`
+is a small GNOME Shell extension that restyles the stock top panel as the
+Ash Desktop panel: a dark translucent (glass) background —
+`rgba(20, 20, 24, 0.70)`, `0.80` while a maximized window has focus —
+with a subtle white bottom border and 0 radius. Only `#panel`'s own
+background is overridden (via a class stylesheet, no container opacity),
+so icons, text and indicators stay fully opaque.
+
+The pinned-taskbar behaviour itself is stock GNOME Shell: the panel never
+auto-hides, reserves struts so maximized windows stop below it, and stays
+in place across workspace switches, screen lock/unlock, and resolution
+changes. No dock/panel extension is installed. The extension declares
+`"session-modes": ["user"]`, so it is unloaded on the lock screen and the
+GDM greeter (those keep the stock shell theme).
+
+The extension is enabled for all users by a system dconf default:
+`etc/dconf/profile/user` declares `system-db:local`, and
+`etc/dconf/db/local.d/00-ash-shell` sets
+`org.gnome.shell enabled-extensions` (users may still override it).
+
+## dconf compilation
+
+dconf clients read compiled binary databases, but the assembly has no
+image-build hook to run `dconf update`. `etc/systemd/system/echoos-dconf-update.service`
+(a oneshot unit, wanted by `sysinit.target`, enabled via a symlink) runs
+`dconf update` once per boot before GDM starts, compiling `local.d` and
+`gdm.d`. It is idempotent and near-instant.
+
+## Validation
+
+- `scripts/validate-desktop.sh` — component payload/contract checks.
+- `scripts/validate-branding.sh` — wallpaper/panel/branding checks.
+  Repository mode by default; `--system` verifies the booted system
+  (compiled dconf dbs, session gsettings values, GDM greeter defaults,
+  extension install and shell-version compatibility).
