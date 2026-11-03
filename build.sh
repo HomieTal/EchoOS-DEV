@@ -14,7 +14,7 @@ OUT="${SCRIPT_DIR}/out"
 # mkarchiso does not process profile/EFI/BOOT (rEFInd was wired in by
 # replacing the systemd-boot binary in the pacstrap dir), so the rEFInd
 # support files must be kept in sync manually: after mkarchiso, install
-# refind.conf / echoos.conf / fonts / icons into BOTH the ISO 9660
+# refind.conf / echoos.conf / fonts / icons / themes into BOTH the ISO 9660
 # EFI/BOOT tree and the EFI system partition image (efiboot.img) — rEFInd
 # reads its configuration from the FAT partition it was launched from.
 mkdir -p "${OUT}"
@@ -36,7 +36,7 @@ if [ -f "${PROFILE}/EFI/BOOT/BOOTx64.EFI" ] && [ -d "${SCRIPT_DIR}/work/iso/EFI/
         [ -f "${PROFILE}/EFI/BOOT/${f}" ] && sudo install -m 644 \
             "${PROFILE}/EFI/BOOT/${f}" "${SCRIPT_DIR}/work/iso/EFI/BOOT/${f}"
     done
-    for d in fonts icons; do
+    for d in fonts icons themes; do
         if [ -d "${PROFILE}/EFI/BOOT/${d}" ]; then
             sudo mkdir -p "${SCRIPT_DIR}/work/iso/EFI/BOOT/${d}"
             sudo cp -r "${PROFILE}/EFI/BOOT/${d}" "${SCRIPT_DIR}/work/iso/EFI/BOOT/"
@@ -50,7 +50,7 @@ if [ -f "${ESP_IMG}" ] && [ -f "${PROFILE}/EFI/BOOT/refind.conf" ]; then
             [ -f "${PROFILE}/EFI/BOOT/${f}" ] && sudo install -m 644 \
                 "${PROFILE}/EFI/BOOT/${f}" "/tmp/echoos-esp/EFI/BOOT/${f}"
         done
-        for d in fonts icons; do
+        for d in fonts icons themes; do
             if [ -d "${PROFILE}/EFI/BOOT/${d}" ]; then
                 sudo mkdir -p "/tmp/echoos-esp/EFI/BOOT/${d}"
                 sudo cp -r "${PROFILE}/EFI/BOOT/${d}" "/tmp/echoos-esp/EFI/BOOT/"
